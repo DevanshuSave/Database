@@ -36,7 +36,6 @@ public class Query {
 		Select selectStatement = (Select) statement;
 		PlainSelect sb = (PlainSelect)selectStatement.getSelectBody();
 		
-		
 		//your code here
 		return null;
 		

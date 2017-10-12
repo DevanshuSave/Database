@@ -60,23 +60,6 @@ public class Catalog {
 
     	Integer myID = file.getId();
     	hm.put(myID, new InnerCatalog(name,file,pkeyField));
-    	
-    	//Question - check if implementation is correct
-    	/*
-    	Integer temp = myIDList.lastIndexOf(myID);
-    	if (temp == -1) {
-    		temp = myIDList.size();
-            myIDList.add(temp, myID);
-            tableNameList.add(temp, name);
-            pkeyFieldList.add(temp, pkeyField);
-            HeapFileList.add(temp, file);
-        } else {
-            myIDList.set(temp, myID);
-            tableNameList.set(temp, name);
-            pkeyFieldList.set(temp, pkeyField);
-            HeapFileList.set(temp, file);
-        }
-        */
     }
 
     public void addTable(HeapFile file, String name) {

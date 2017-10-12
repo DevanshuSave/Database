@@ -143,7 +143,25 @@ public class Relation {
 	public Relation aggregate(AggregateOperator op, boolean groupBy) {
 		//your code here
 		Relation r = new Relation(new ArrayList<>(), getDesc());
+		TupleDesc myDesc = getDesc();
+		if(groupBy) {
+			if(op==AggregateOperator.COUNT) {
+				myDesc.setTypes(new Type[] {myDesc.getType(0),Type.INT});
+			}
+		}
+		else {
+			if(op==AggregateOperator.COUNT) {
+				myDesc.setTypes(new Type[] {Type.INT});
+			}
+		}
 		
+		Aggregator aggregator = new Aggregator(op, groupBy, myDesc);
+		for (Tuple tuple : getTuples()) {
+			aggregator.merge(tuple);
+		}
+		r.tuples = aggregator.getResults();
+		return r;
+		/*
 		if(getDesc().getType(0)==Type.INT) {
 			Tuple t = new Tuple(getDesc());
 			switch (op) {
@@ -228,7 +246,9 @@ public class Relation {
 				break;
 			}
 		}
+		
 		return r;
+		*/
 	}
 	
 	public TupleDesc getDesc() {
