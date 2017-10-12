@@ -1,7 +1,8 @@
 package hw1;
 
-import java.sql.Types;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This class represents a tuple that will contain a single row's worth of information
@@ -15,13 +16,24 @@ public class Tuple {
 	 * Creates a new tuple with the given description
 	 * @param t the schema for this tuple
 	 */
+	private TupleDesc desc;
+	private int pid;
+	private int id;
+	private Map<Integer, Field> field = new HashMap<Integer, Field>();
+	
 	public Tuple(TupleDesc t) {
 		//your code here
+		this.desc = t;
+		this.pid = 0;
+		/*for(int i = 0;i<t.numFields();i++) {
+			tuples[i]=t.getType(i).toString();
+		}
+		*/
 	}
 	
 	public TupleDesc getDesc() {
 		//your code here
-		return null;
+		return this.desc;
 	}
 	
 	/**
@@ -30,11 +42,12 @@ public class Tuple {
 	 */
 	public int getPid() {
 		//your code here
-		return 0;
+		return this.pid;
 	}
 
 	public void setPid(int pid) {
 		//your code here
+		this.pid = pid;
 	}
 
 	/**
@@ -43,15 +56,17 @@ public class Tuple {
 	 */
 	public int getId() {
 		//your code here
-		return 0;
+		return this.id;
 	}
 
 	public void setId(int id) {
 		//your code here
+		this.id = id;
 	}
 	
 	public void setDesc(TupleDesc td) {
 		//your code here;
+		this.desc = td;
 	}
 	
 	/**
@@ -59,13 +74,29 @@ public class Tuple {
 	 * @param i the field number to store the data
 	 * @param v the data
 	 */
-	public void setField(int i, byte[] v) {
+	public void setField(int i, Field v) {
 		//your code here
+		/*byte[] a = {(byte)65, (byte)66};
+		char ch = (char)(a[0] & 0xFF);
+		System.out.println(ch);
+		String sss = Character.toString(ch);
+		System.out.println(sss);
+		String s="";
+		System.out.println();
+		char c;
+		for(int j=0;j<v.length;j++) {
+			c = (char)(v[j] & 0xFF);	
+			s+=Character.toString(c);
+		}
+		String s1 =  new String(v);
+		System.out.println(s1);
+		System.out.println();*/
+		this.field.put(i, v);
 	}
 	
-	public byte[] getField(int i) {
+	public Field getField(int i) {
 		//your code here
-		return null;
+		return this.field.get(i);
 	}
 	
 	/**
@@ -75,7 +106,10 @@ public class Tuple {
 	 */
 	public String toString() {
 		//your code here
-		return "";
+		StringBuilder s = new StringBuilder();
+		for(int i = 0;i < this.field.size();i++) {
+			s.append(this.getField(i).toString());
+		}
+		return s.toString();
 	}
 }
-	

@@ -15,6 +15,8 @@ import hw1.Catalog;
 import hw1.Database;
 import hw1.HeapFile;
 import hw1.HeapPage;
+import hw1.IntField;
+import hw1.StringField;
 import hw1.Tuple;
 import hw1.TupleDesc;
 
@@ -53,14 +55,15 @@ public class HeapPageTest {
 		}
 	}
 	
+	
 	public void testAddTuple() {
 		Tuple t = new Tuple(td);
-		t.setField(0, new byte[] {0, 0, 0, (byte)131});
+		t.setField(0, new IntField(new byte[] {0, 0, 0, (byte)131}));
 		byte[] s = new byte[129];
 		s[0] = 2;
 		s[1] = 98;
 		s[2] = 121;
-		t.setField(1, s);
+		t.setField(1, new StringField(s));
 		
 		try {
 			hp.addTuple(t);
@@ -71,6 +74,7 @@ public class HeapPageTest {
 		
 		Iterator<Tuple> it = hp.iterator();
 		assertTrue(it.hasNext());
+		System.out.println("1");
 		it.next();
 		assertTrue(it.hasNext());
 		it.next();
@@ -81,16 +85,17 @@ public class HeapPageTest {
 	@Test
 	public void testDelete() {
 		Tuple t = new Tuple(td);
-		t.setField(0, new byte[] {0, 0, 0, (byte)530});
+		t.setField(0, new IntField(new byte[] {0, 0, 0x02, 0x12}));
 		byte[] s = new byte[129];
 		s[0] = 2;
 		s[1] = 0x68;
 		s[2] = 0x69;
-		t.setField(1, s);
-		
+		t.setField(1, new StringField(s));
+
 		try {
 			hp.deleteTuple(t);
 		} catch (Exception e) {
+			System.out.println(e.toString());
 			fail("error when deleting valid tuple");
 			e.printStackTrace();
 		}

@@ -112,7 +112,7 @@ public class RelationTest {
 		ar = ar.aggregate(AggregateOperator.SUM, false);
 		
 		assertTrue(ar.getTuples().size() == 1);
-		IntField agg = new IntField(ar.getTuples().get(0).getField(0));
+		IntField agg = new IntField(Integer.parseInt(ar.getTuples().get(0).getField(0).toString()));
 		assertTrue(agg.getValue() == 36);
 	}
 	
@@ -123,5 +123,5 @@ public class RelationTest {
 		
 		assertTrue(ar.getTuples().size() == 4);
 	}
-
+	
 }

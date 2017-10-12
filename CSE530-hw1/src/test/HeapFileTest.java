@@ -4,11 +4,9 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-import static java.nio.file.StandardCopyOption.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -16,9 +14,10 @@ import org.junit.Test;
 import hw1.Catalog;
 import hw1.Database;
 import hw1.HeapFile;
+import hw1.IntField;
+import hw1.StringField;
 import hw1.Tuple;
 import hw1.TupleDesc;
-import hw1.Type;
 
 public class HeapFileTest {
 	
@@ -38,7 +37,6 @@ public class HeapFileTest {
 		
 		c = Database.getCatalog();
 		c.loadSchema("testfiles/test.txt");
-		
 		int tableId = c.getTableId("test");
 		td = c.getTupleDesc(tableId);
 		hf = c.getDbFile(tableId);
@@ -55,12 +53,12 @@ public class HeapFileTest {
 	@Test
 	public void testWrite() {
 		Tuple t = new Tuple(td);
-		t.setField(0, new byte[] {0, 0, 0, (byte)131});
+		t.setField(0, new IntField(new byte[] {0, 0, 0, (byte)131}));
 		byte[] s = new byte[129];
 		s[0] = 2;
 		s[1] = 98;
 		s[2] = 121;
-		t.setField(1, s);
+		t.setField(1, new StringField(s));
 		
 		try {
 			hf.addTuple(t);
@@ -75,12 +73,12 @@ public class HeapFileTest {
 	@Test
 	public void testRemove() {
 		Tuple t = new Tuple(td);
-		t.setField(0, new byte[] {0, 0, 0, (byte)530});
+		t.setField(0, new IntField(new byte[] {0, 0, 0, (byte)530}));
 		byte[] s = new byte[129];
 		s[0] = 2;
 		s[1] = 0x68;
 		s[2] = 0x69;
-		t.setField(1, s);
+		t.setField(1, new StringField(s));
 		
 		try {
 			hf.deleteTuple(t);

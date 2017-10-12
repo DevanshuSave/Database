@@ -17,7 +17,6 @@ import hw1.Query;
 import hw1.Relation;
 
 
-
 public class QueryTest {
 	
 	private Catalog c;
@@ -81,7 +80,7 @@ public class QueryTest {
 		Relation r = q.execute();
 		
 		assertTrue(r.getTuples().size() == 1);
-		IntField agg = new IntField(r.getTuples().get(0).getField(0));
+		IntField agg = new IntField(r.getTuples().get(0).getField(0).toByteArray());
 		assertTrue(agg.getValue() == 36);
 	}
 	
@@ -101,5 +100,4 @@ public class QueryTest {
 		assertTrue(r.getTuples().size() == 8);
 		assertTrue(r.getDesc().getSize() == 8);
 	}
-	
 }

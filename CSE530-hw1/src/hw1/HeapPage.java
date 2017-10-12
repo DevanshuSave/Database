@@ -36,8 +36,9 @@ public class HeapPage {
 		try{
 			// allocate and read the actual records of this page
 			tuples = new Tuple[numSlots];
-			for (int i=0; i<tuples.length; i++)
+			for (int i=0; i<tuples.length; i++) {
 				tuples[i] = readNextTuple(dis,i);
+			}
 		}catch(NoSuchElementException e){
 			e.printStackTrace();
 		}
@@ -46,7 +47,7 @@ public class HeapPage {
 
 	public int getId() {
 		//your code here
-		return 0;
+		return id;
 	}
 
 	/**
@@ -56,7 +57,7 @@ public class HeapPage {
 	 */
 	public int getNumSlots() {
 		//your code here
-		return 0;
+		return (HeapFile.PAGE_SIZE*8)/((td.getSize()*8)+1);
 	}
 
 	/**
@@ -65,8 +66,15 @@ public class HeapPage {
 	 */
 	private int getHeaderSize() {        
 		//your code here
-		return 0;
+		return (getNumSlots()+7)/8;
 	}
+	
+	//created for HeapFile class getAllTuples method
+	public Tuple[] getTuples() {        
+		//your code here
+		return tuples;
+	}
+	
 
 	/**
 	 * Checks to see if a slot is occupied or not by checking the header
@@ -75,6 +83,9 @@ public class HeapPage {
 	 */
 	public boolean slotOccupied(int s) {
 		//your code here
+		if((header[s/8] >> s%8 & 1)==1) {
+			return true;
+		}
 		return false;
 	}
 
@@ -85,6 +96,12 @@ public class HeapPage {
 	 */
 	public void setSlotOccupied(int s, boolean value) {
 		//your code here
+		if (value) {
+			header[s/8] = (byte) (header[s/8] | (1 << (s%8)));
+		}
+		else {
+			header[s/8] = (byte) (header[s/8] & ~(1 << (s%8)));
+		}
 	}
 	
 	/**
@@ -95,6 +112,20 @@ public class HeapPage {
 	 */
 	public void addTuple(Tuple t) throws Exception {
 		//your code here
+		int n  = getNumSlots();
+		for (int i=0;i<n;i++) {
+			if (!slotOccupied(i)) {
+				if(t.getDesc().equals(td)) {
+					
+					t.setId(i);
+					t.setPid(getId());
+					tuples[i]=t;
+					setSlotOccupied(i,true);
+					return;
+				}
+			}
+		}
+		throw new Exception("Tuple cannot be inserted");
 	}
 
 	/**
@@ -103,8 +134,18 @@ public class HeapPage {
 	 * @param t the tuple to be deleted
 	 * @throws Exception
 	 */
-	public void deleteTuple(Tuple t) {
+	public void deleteTuple(Tuple t) throws NoSuchElementException {
 		//your code here
+		int n  = getNumSlots();
+		for (int i = 0;i<n;i++) {
+			if(slotOccupied(i)) {
+				if(tuples[i].getDesc().equals(t.getDesc()) && t.getPid()==tuples[i].getPid()) {
+					setSlotOccupied(i,false);
+					return;
+				}
+			}
+		}
+		throw new NoSuchElementException();
 	}
 	
 	/**
@@ -131,21 +172,21 @@ public class HeapPage {
 
 		for (int j=0; j<td.numFields(); j++) {
 			if(td.getType(j) == Type.INT) {
-				byte[] field = new byte[4];
+				byte[] b = new byte[4];
+				IntField intField = new IntField(b);
 				try {
-					dis.read(field);
-					t.setField(j, field);
+					dis.read(intField.toByteArray());
+					t.setField(j, intField);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			} else {
-				byte[] field = new byte[132];
+				byte[] b = new byte[129];
+				StringField stringField = new StringField(b);
 				try {
-					dis.read(field);
-					t.setField(j, field);
+					dis.read(stringField.toByteArray());
+					t.setField(j, stringField);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -198,9 +239,9 @@ public class HeapPage {
 
 			// non-empty slot
 			for (int j=0; j<td.numFields(); j++) {
-				byte[] f = tuples[i].getField(j);
+				Field f = tuples[i].getField(j);
 				try {
-					dos.write(f);
+					dos.write(f.toByteArray());
 
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -232,6 +273,10 @@ public class HeapPage {
 	 */
 	public Iterator<Tuple> iterator() {
 		//your code here
-		return null;
+		ArrayList<Tuple> myList = new ArrayList<Tuple>();
+        for (int i = 0; i < numSlots; i ++) {
+            if (slotOccupied(i)) myList.add(tuples[i]);
+        }
+        return myList.iterator();
 	}
 }
