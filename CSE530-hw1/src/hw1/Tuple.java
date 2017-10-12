@@ -76,21 +76,6 @@ public class Tuple {
 	 */
 	public void setField(int i, Field v) {
 		//your code here
-		/*byte[] a = {(byte)65, (byte)66};
-		char ch = (char)(a[0] & 0xFF);
-		System.out.println(ch);
-		String sss = Character.toString(ch);
-		System.out.println(sss);
-		String s="";
-		System.out.println();
-		char c;
-		for(int j=0;j<v.length;j++) {
-			c = (char)(v[j] & 0xFF);	
-			s+=Character.toString(c);
-		}
-		String s1 =  new String(v);
-		System.out.println(s1);
-		System.out.println();*/
 		this.field.put(i, v);
 	}
 	

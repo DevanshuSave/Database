@@ -110,9 +110,8 @@ public class RelationTest {
 		c.add(1);
 		ar = ar.project(c);
 		ar = ar.aggregate(AggregateOperator.SUM, false);
-		
+		IntField agg = (IntField) ar.getTuples().get(0).getField(0);
 		assertTrue(ar.getTuples().size() == 1);
-		IntField agg = new IntField(Integer.parseInt(ar.getTuples().get(0).getField(0).toString()));
 		assertTrue(agg.getValue() == 36);
 	}
 	
@@ -120,7 +119,6 @@ public class RelationTest {
 	public void testGroupBy() {
 		Relation ar = new Relation(ahf.getAllTuples(), atd);
 		ar = ar.aggregate(AggregateOperator.SUM, true);
-		
 		assertTrue(ar.getTuples().size() == 4);
 	}
 	

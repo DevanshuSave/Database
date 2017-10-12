@@ -28,11 +28,11 @@ public class Relation {
 	 */
 	public Relation select(int field, RelationalOperator op, Field operand) {
 		//your code here
-		Relation r = new Relation(new ArrayList<Tuple>(),getDesc());
-		if(this.getTuples().isEmpty()) {
-			return r;
+		if(getTuples().isEmpty()) {
+			return new Relation(new ArrayList<Tuple>(),getDesc());
 		}
-		for (Tuple tup :  this.tuples) {
+		Relation r = new Relation(new ArrayList<Tuple>(),getDesc());
+		for (Tuple tup :  getTuples()) {
 			if(tup.getField(field).compare(op, operand)) {
 				r.tuples.add(tup);
 			}
@@ -70,17 +70,17 @@ public class Relation {
 		Type t[] = new Type[fields.size()];
 		TupleDesc tupleDesc = new TupleDesc(t, s);
 		for(int i =0;i<fields.size();i++) {
-			s[i]=td.getFieldName(i);
-			t[i]=td.getType(i);
+			s[i]=td.getFieldName(fields.get(i));
+			t[i]=td.getType(fields.get(i));
 		}
 		tupleDesc.setFields(s);
 		tupleDesc.setTypes(t);
 		
 		Relation r = new Relation(new ArrayList<Tuple>(), tupleDesc);
 		for(int i = 0;i<fields.size();i++) {
-			for (Tuple tuple :  this.tuples) {
+			for (Tuple myTup : getTuples()) {
 				Tuple tup = new Tuple(tupleDesc);
-				tup.setField(i, tuple.getField(i));
+				tup.setField(i, myTup.getField(fields.get(i)));
 				r.getTuples().add(tup);
 			}
 		}
@@ -103,12 +103,8 @@ public class Relation {
 		String s[] = new String[getDesc().numFields()+other.getDesc().numFields()];
 		Type t[] = new Type[getDesc().numFields()+other.getDesc().numFields()];
 		TupleDesc tupleDesc = new TupleDesc(t, s);
-		System.out.println("here"+s.length);
-		System.out.println("heredesc"+getDesc().numFields());
-		System.out.println("here"+getDesc().numFields());
 		
 		for(int i=0;i<s.length;i++) {
-			System.out.println("i"+i);
 			if(i<getDesc().numFields()) {
 				s[i]=getDesc().getFieldName(i);
 				t[i]=getDesc().getType(i);
@@ -122,20 +118,17 @@ public class Relation {
 		tupleDesc.setTypes(t);
 		
 		Relation r = new Relation(new ArrayList<Tuple>(), tupleDesc);
-		for(int i = 0;i<s.length;i++) {
-			Tuple tup = new Tuple(tupleDesc);
-			if(i<td.numFields()) {
-				for (Tuple tuple :  this.tuples) {
-					tup.setField(i, tuple.getField(i));
+			
+		for (Tuple tuple :  this.getTuples()) {
+			for(Tuple tuple2 : other.getTuples()) {
+				if(tuple.getField(field1).compare(RelationalOperator.EQ, tuple2.getField(field2))) {
+					Tuple tup = new Tuple(tupleDesc);
+					for(int i = 0;i<s.length;i++) {
+						tup.setField(i, tuple.getField(i));
+						tup.setField(i+td.numFields(), tuple2.getField(i));
+					}
+					r.getTuples().add(tup);
 				}
-			}
-			else {
-				for (Tuple tuple :  other.tuples) {
-					tup.setField(i, tuple.getField(i));
-				}
-			}
-			if(tup.getField(field1).compare(RelationalOperator.EQ, tup.getField(td.numFields()+field2))) {
-				r.getTuples().add(tup);
 			}
 		}
 		return r;
@@ -150,80 +143,89 @@ public class Relation {
 	public Relation aggregate(AggregateOperator op, boolean groupBy) {
 		//your code here
 		Relation r = new Relation(new ArrayList<>(), getDesc());
-		if(this.td.getType(0)==Type.INT) {
+		
+		if(getDesc().getType(0)==Type.INT) {
 			Tuple t = new Tuple(getDesc());
 			switch (op) {
 	        case MAX:
 	        	int max = ((IntField) tuples.get(0).getField(0)).getValue();
-	        	for (Tuple tuple : this.tuples) {
+	        	for (Tuple tuple : getTuples()) {
 	        		if(((IntField) tuple.getField(0)).getValue()>max) {
 	        			max = ((IntField) tuple.getField(0)).getValue();
 	        			t=tuple;
 	        		}
 				}
 	            r.tuples.add(t);
+	            break;
 	            
 	        case MIN:
 	        	int min = ((IntField) tuples.get(0).getField(0)).getValue();
-	        	for (Tuple tuple : this.tuples) {
+	        	for (Tuple tuple : getTuples()) {
 	        		if(((IntField) tuple.getField(0)).getValue()<min) {
 	        			min = ((IntField) tuple.getField(0)).getValue();
 	        			t=tuple;
 	        		}
 				}
 	            r.tuples.add(t);
+	            break;
 	            
 	        case SUM:
 	        	int sum = 0;
-	        	for (Tuple tuple : this.tuples) {
+	        	for (Tuple tuple : getTuples()) {
 	        		sum += ((IntField) tuple.getField(0)).getValue();
 	        	}
 	        	t.setField(0, new IntField(sum));
 	            r.tuples.add(t);
+	            break;
 
 	        case AVG:
 	        	int avg = 0;
-	        	for (Tuple tuple : this.tuples) {
+	        	for (Tuple tuple : getTuples()) {
 	        		avg += ((IntField) tuple.getField(0)).getValue();
 	        	}
 	        	t.setField(0, new IntField(avg/tuples.size()));
 	            r.tuples.add(t);
+	            break;
 
 	        case COUNT:
 	        	t.setField(0, new IntField(tuples.size()));
 	            r.tuples.add(t);
-			default:
-				r=this;
+	            break;
 			}
 		}
-		if(this.td.getType(0)==Type.STRING) {
+		if(getDesc().getType(0)==Type.STRING) {
 			Tuple t = new Tuple(getDesc());
 			switch (op) {
 	        case MAX:
 	        	String max = ((StringField) tuples.get(0).getField(0)).getValue();
-	        	for (Tuple tuple : this.tuples) {
+	        	for (Tuple tuple : getTuples()) {
 	        		if((((StringField) tuple.getField(0)).getValue()).compareTo(max)==1) {
 	        			max = ((StringField) tuple.getField(0)).getValue();
 	        			t=tuple;
 	        		}
 				}
 	            r.tuples.add(t);
+	            break;
 	            
 	        case MIN:
 	        	String min = ((StringField) tuples.get(0).getField(0)).getValue();
-	        	for (Tuple tuple : this.tuples) {
+	        	for (Tuple tuple : getTuples()) {
 	        		if((((StringField) tuple.getField(0)).getValue()).compareTo(min)==-1) {
 	        			min = ((StringField) tuple.getField(0)).getValue();
 	        			t=tuple;
 	        		}
 				}
 	            r.tuples.add(t);
+	            break;
 	            
 	        case COUNT:
 	        	t.setField(0, new StringField(Integer.toString(tuples.size())));
 	            r.tuples.add(t);
-			default:
-				r=this;
+	            break;
+			case AVG:
+				break;
+			case SUM:
+				break;
 			}
 		}
 		return r;

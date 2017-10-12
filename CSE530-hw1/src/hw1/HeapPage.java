@@ -120,6 +120,7 @@ public class HeapPage {
 					t.setId(i);
 					t.setPid(getId());
 					tuples[i]=t;
+					System.out.println("in heapfile:addtuple:first:"+t);
 					setSlotOccupied(i,true);
 					return;
 				}
@@ -172,20 +173,18 @@ public class HeapPage {
 
 		for (int j=0; j<td.numFields(); j++) {
 			if(td.getType(j) == Type.INT) {
-				byte[] b = new byte[4];
-				IntField intField = new IntField(b);
+				byte[] field = new byte[4];
 				try {
-					dis.read(intField.toByteArray());
-					t.setField(j, intField);
+					dis.read(field);
+					t.setField(j, new IntField (field));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			} else {
-				byte[] b = new byte[129];
-				StringField stringField = new StringField(b);
+				byte[] field = new byte[129];
 				try {
-					dis.read(stringField.toByteArray());
-					t.setField(j, stringField);
+					dis.read(field);
+					t.setField(j, new StringField(field));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

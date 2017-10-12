@@ -13,7 +13,6 @@ public class Aggregator {
 
 	public Aggregator(AggregateOperator o, boolean groupBy, TupleDesc td) {
 		//your code here
-
 	}
 
 	/**

@@ -111,6 +111,7 @@ public class HeapFile {
         	for (int j = 0; j < hp.getNumSlots(); j ++) {
                 if (!hp.slotOccupied(j)) {
                 	hp.addTuple(t);
+                	System.out.println("in heapfile:addtuple:first:"+t);
                 	try {
 	                    byte[] byteStream = hp.getPageData();
 	                    RandomAccessFile raf = new RandomAccessFile(f, "rw");
@@ -127,6 +128,7 @@ public class HeapFile {
         }
         HeapPage hp = new HeapPage(getNumPages(), new byte[PAGE_SIZE], this.getId());
         hp.addTuple(t);
+        System.out.println("in heapfile:addtuple:second:"+t);
         this.writePage(hp);
         return hp;
 	}

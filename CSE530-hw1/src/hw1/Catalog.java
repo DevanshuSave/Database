@@ -43,11 +43,6 @@ public class Catalog {
 	}
     public Catalog() {
     	//your code here
-    	//this.innerCatalog = innerCatalog;
-    	/*for (int i = 0; i < SIZE; i++) {
-    		arrayOfTables[i]=i;
-    	}*/
-    	//Question - what is expected here? (called from Database.java)
     	myIDList = new ArrayList<Integer>(0);
     }
 
