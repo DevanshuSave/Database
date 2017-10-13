@@ -80,10 +80,7 @@ public class Relation {
 		this.td.setFields(s);
 		this.td.setTypes(t);
 		
-		System.out.println("ankit"+this.toString());
 		Relation rel = new Relation(new ArrayList<Tuple>(), tupleDesc);
-		System.out.println("before rel"+rel.toString());
-		System.out.println("Relation:"+getTuples().toString());
 		
 		for(int i = 0;i<fields.size();i++) {
 			for (Tuple myTup : getTuples()) {
@@ -92,7 +89,6 @@ public class Relation {
 				rel.getTuples().add(tup);
 			}
 		}
-		//System.out.println("after rel"+rel.toString());
 		return rel;
 	}
 	
@@ -125,6 +121,9 @@ public class Relation {
 		}
 		tupleDesc.setFields(s);
 		tupleDesc.setTypes(t);
+		
+		this.td.setFields(s);
+		this.td.setTypes(t);
 		
 		Relation r = new Relation(new ArrayList<Tuple>(), tupleDesc);
 			

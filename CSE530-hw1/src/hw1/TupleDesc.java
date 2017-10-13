@@ -78,7 +78,7 @@ public class TupleDesc {
     		throw new NoSuchElementException("");
     	}
     	for(int i = 0; i<numFields();i++) {
-    		if(getFieldName(i).equals(name)) {
+    		if(getFieldName(i).equalsIgnoreCase(name)) {
     			return i;
     		}
     	}

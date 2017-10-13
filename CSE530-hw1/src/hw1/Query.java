@@ -2,6 +2,7 @@
 package hw1;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import net.sf.jsqlparser.JSQLParserException;
@@ -43,15 +44,65 @@ public class Query {
 		
 		((SelectExpressionItem) sb.getSelectItems().get(0)).getAlias();
 		List<SelectItem> items = sb.getSelectItems();
+		System.out.println("xxxx"+items);
 		
 		
 		FromItem fromItem = sb.getFromItem();
-		
 		Catalog c = Database.getCatalog();
 		int tab = c.getTableId(fromItem.toString());
 		ArrayList<Tuple> myTuples = c.getDbFile(tab).getAllTuples();
 		TupleDesc td = myTuples.get(0).getDesc();
+		Relation r = new Relation(myTuples,td);
 		
+		
+		System.out.println("joins:"+sb.getJoins());
+		List<Join> myJoins= sb.getJoins();
+		if(myJoins!=null) {
+			for(Join j : myJoins) {
+				FromItem temp = j.getRightItem();
+				Catalog c1 = Database.getCatalog();
+				int tab1 = c1.getTableId(temp.toString());
+				ArrayList<Tuple> myTuples1 = c1.getDbFile(tab1).getAllTuples();
+				TupleDesc td1 = myTuples1.get(0).getDesc();
+				Relation r1 = new Relation(myTuples1,td1);
+				String myS[] = j.getOnExpression().toString().split(" = ");
+				String myS2[] = myS[0].split("\\.");
+				String myS3[] = myS[1].split("\\.");
+				int f1=0;
+				int f2=0;
+				if(c.getTableId(myS2[0].trim())==tab) {
+					String[] ff = td.getFields();
+					for (int i =0;i<ff.length;i++) {
+						if(ff[i].equalsIgnoreCase(myS2[1].trim())) {
+							f1=i;
+						}
+					}
+					
+					String[] ff1 = td1.getFields();
+					for (int i=0;i<ff1.length;i++) {
+						if(ff1[i].equalsIgnoreCase(myS3[1].trim())) {
+							f2=i;
+						}
+					}
+				}
+				else {
+					String[] ff = td1.getFields();
+					for (int i =0;i<ff.length;i++) {
+						if(ff[i].equals(myS2[1].trim())) {
+							f2=i;
+						}
+					}
+					
+					String[] ff1 = td.getFields();
+					for (int i=0;i<ff1.length;i++) {
+						if(ff1[i].equals(myS3[1].trim())) {
+							f1=i;
+						}
+					}
+				}
+				r = r.join(r1, f1, f2);
+			}
+		}
 		ArrayList<Integer> projectItems = new ArrayList<>();
 		for(SelectItem i : items) {
 			ColumnVisitor columnVisitor = new ColumnVisitor();
@@ -59,7 +110,7 @@ public class Query {
 			projectItems.add(td.nameToId(columnVisitor.getColumn()));
 		}
 		
-		Relation r = new Relation(myTuples,td);
+		
 		//if(r.getDesc().equals(td)) {
 		r.project(projectItems);
 		//}
@@ -70,7 +121,8 @@ public class Query {
 			sb.getWhere().accept(whereExpressionVisitor);
 			r=r.select(td.nameToId(whereExpressionVisitor.getLeft()), whereExpressionVisitor.getOp(), whereExpressionVisitor.getRight());
 		}
-		System.out.println("xxxxxx"+r.toString());
+		
+		//System.out.println("xxxxxx"+r.toString());
 		return r;
 		
 	}

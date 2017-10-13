@@ -75,7 +75,7 @@ public class Catalog {
     	for (Map.Entry<Integer, InnerCatalog> temp : hm.entrySet()) {
     		Integer key = temp.getKey();
     		InnerCatalog value = temp.getValue();
-    		if(value.name.equals(name)) {
+    		if(value.name.equalsIgnoreCase(name)) {
     			return key;
     		}
     	}

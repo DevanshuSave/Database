@@ -42,9 +42,6 @@ public class QueryTest {
 		System.out.println("Simpleteststarts");
 		Query q = new Query("SELECT a1, a2 FROM A");
 		Relation r = q.execute();
-		System.out.println("1Test"+r.getTuples().size());
-		System.out.println("2Test"+r.getDesc().getSize());
-		//System.out.println("3Test"+r.getTuples().toString());
 		
 		assertTrue(r.getTuples().size() == 8);
 		assertTrue(r.getDesc().getSize() == 8);
@@ -65,14 +62,11 @@ public class QueryTest {
 		Query q = new Query("SELECT a2 FROM A");
 		Relation r = q.execute();
 		
-		System.out.println(r.getDesc().toString());
-		System.out.println(r.getDesc().getSize());
-		System.out.println(r.getTuples().size());
 		assertTrue(r.getDesc().getSize() == 4);
 		assertTrue(r.getTuples().size() == 8);
 		assertTrue(r.getDesc().getFieldName(0).equals("a2"));
 	}
-	/*
+	
 	@Test
 	public void testJoin() {
 		Query q = new Query("SELECT c1, c2, a1, a2 FROM test JOIN A ON test.c1 = a.a1");
@@ -81,7 +75,7 @@ public class QueryTest {
 		assert(r.getTuples().size() == 5);
 		assert(r.getDesc().getSize() == 141);
 	}
-	
+	/*
 	@Test
 	public void testAggregate() {
 		Query q = new Query("SELECT SUM(a2) FROM A");
