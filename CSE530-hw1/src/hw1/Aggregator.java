@@ -18,6 +18,7 @@ public class Aggregator {
 	private boolean group;
 	private TupleDesc tupleDesc;
 	private Map tuples;
+	private Map<Field,Integer> count;
 
 	public Aggregator(AggregateOperator o, boolean groupBy, TupleDesc td) {
 		//your code here
@@ -181,11 +182,13 @@ public class Aggregator {
 
 		        case AVG:
 		        	if(tuples.get(t.getField(0))!=null){
-		        		tuples.put(t.getField(0),((IntField)t.getField(1)).getValue());
-		        		tuples.put(t.getField(1), ((tuples.size()-1*((int)tuples.get(1)))+(((IntField)t.getField(1)).getValue()))/tuples.size());
+		        		//tuples.put(t.getField(0),((IntField)t.getField(1)).getValue());
+		        		count.put(t.getField(0), (int)count.get(t.getField(0))+1);
+		        		tuples.put(t.getField(0), ((count.get(t.getField(0))-1*((int)tuples.get(t.getField(0)))+(((IntField)t.getField(1)).getValue()))/count.get(t.getField(0))));
 		        	}
 		        	else {
 		        		tuples.put(t.getField(0), ((IntField)t.getField(0)).getValue());
+		        		count.put(t.getField(0), 1);
 		        	}
 		            break;
 
@@ -245,6 +248,9 @@ public class Aggregator {
 	 */
 	public ArrayList<Tuple> getResults() {
 		//your code here
+		if(aggregateOperator==AggregateOperator.AVG && group) {
+			
+		}
 		ArrayList<Tuple> myTuples = new ArrayList<Tuple>();
 		if(!group) {
 			for(int i=0;i<tuples.size();i++) {

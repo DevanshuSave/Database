@@ -21,10 +21,8 @@ public class Catalog {
      * Constructor.
      * Creates a new, empty catalog.
      */
-	//private final static int SIZE = 15;
-	//private String[] arrayOfTables;
 	
-	private Map<Integer,InnerCatalog> hm = new HashMap<Integer,InnerCatalog>();
+	private Map<Integer,InnerCatalog> hm;
 	
 	//next
 	private ArrayList<Integer> myIDList;
@@ -45,6 +43,7 @@ public class Catalog {
     public Catalog() {
     	//your code here
     	myIDList = new ArrayList<Integer>(0);
+    	hm = new HashMap<Integer,InnerCatalog>();
     }
 
     /**
@@ -82,7 +81,7 @@ public class Catalog {
     	}
     	throw new NoSuchElementException();
     }
-    
+    /*
     //New method created for finding table id from Heapfile
     public int getTableId(HeapFile file) throws NoSuchElementException{
     	//your code here
@@ -96,7 +95,7 @@ public class Catalog {
     	}
     	throw new NoSuchElementException();
     }
-    
+    */
     /**
      * Returns the tuple descriptor (schema) of the specified table
      * @param tableid The id of the table, as specified by the DbFile.getId()

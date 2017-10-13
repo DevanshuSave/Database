@@ -77,15 +77,23 @@ public class Relation {
 		tupleDesc.setFields(s);
 		tupleDesc.setTypes(t);
 		
-		Relation r = new Relation(new ArrayList<Tuple>(), tupleDesc);
+		this.td.setFields(s);
+		this.td.setTypes(t);
+		
+		System.out.println("ankit"+this.toString());
+		Relation rel = new Relation(new ArrayList<Tuple>(), tupleDesc);
+		System.out.println("before rel"+rel.toString());
+		System.out.println("Relation:"+getTuples().toString());
+		
 		for(int i = 0;i<fields.size();i++) {
 			for (Tuple myTup : getTuples()) {
 				Tuple tup = new Tuple(tupleDesc);
 				tup.setField(i, myTup.getField(fields.get(i)));
-				r.getTuples().add(tup);
+				rel.getTuples().add(tup);
 			}
 		}
-		return r;
+		//System.out.println("after rel"+rel.toString());
+		return rel;
 	}
 	
 	/**
