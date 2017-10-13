@@ -52,7 +52,7 @@ public class Query {
 		ArrayList<Tuple> myTuples = c.getDbFile(tab).getAllTuples();
 		TupleDesc td = myTuples.get(0).getDesc();
 		Relation r = new Relation(myTuples,td);
-		
+		System.out.println("VVVVVVVVVVV"+r.getTuples().size());
 		
 		System.out.println("joins:"+sb.getJoins());
 		List<Join> myJoins= sb.getJoins();
@@ -104,6 +104,7 @@ public class Query {
 		}
 		ArrayList<Integer> projectItems = new ArrayList<>();
 		if(!items.get(0).toString().equals("*")) {
+			boolean a = false;
 			for(SelectItem i : items) {
 				ColumnVisitor columnVisitor = new ColumnVisitor();
 				i.accept(columnVisitor);
@@ -117,6 +118,9 @@ public class Query {
 					}
 					else {
 						r.aggregate(columnVisitor.getOp(), false);
+						//projectItems=new ArrayList<>();
+						//projectItems.add(td.nameToId(columnVisitor.getColumn()));
+						//break;
 					}
 				}
 			}

@@ -58,7 +58,6 @@ public class QueryTest {
 	
 	@Test
 	public void testProject() {
-		System.out.println("Projectteststarts");
 		Query q = new Query("SELECT a2 FROM A");
 		Relation r = q.execute();
 		
@@ -78,16 +77,18 @@ public class QueryTest {
 	
 	@Test
 	public void testAggregate() {
+		System.out.println("****************************");
 		Query q = new Query("SELECT SUM(a2) FROM A");
 		Relation r = q.execute();
-		
+		System.out.println("anaaaaaaaaaaaaaaaaaakit"+r.getTuples().size());
 		assertTrue(r.getTuples().size() == 1);
-		IntField agg = new IntField(r.getTuples().get(0).getField(0).toByteArray());
+		IntField agg = (IntField)(r.getTuples().get(0).getField(0));
 		assertTrue(agg.getValue() == 36);
 	}
 	
 	@Test
 	public void testGroupBy() {
+		
 		Query q = new Query("SELECT a1, SUM(a2) FROM A GROUP BY a1");
 		Relation r = q.execute();
 		
