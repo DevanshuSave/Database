@@ -113,12 +113,11 @@ public class Query {
 				}
 				else {
 					if(sb.getGroupByColumnReferences()!=null) {
-						//projectItems.add(td.nameToId(columnVisitor.getColumn()));
 						r=r.aggregate(columnVisitor.getOp(), true);
 					}
 					else {
-						r.aggregate(columnVisitor.getOp(), false);
-						//projectItems=new ArrayList<>();
+						r=r.aggregate(columnVisitor.getOp(), false);
+						projectItems=new ArrayList<>();
 						//projectItems.add(td.nameToId(columnVisitor.getColumn()));
 						//break;
 					}
