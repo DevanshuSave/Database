@@ -107,13 +107,23 @@ public class Query {
 			for(SelectItem i : items) {
 				ColumnVisitor columnVisitor = new ColumnVisitor();
 				i.accept(columnVisitor);
-				projectItems.add(td.nameToId(columnVisitor.getColumn()));
+				if(!columnVisitor.isAggregate()) {
+					projectItems.add(td.nameToId(columnVisitor.getColumn()));
+				}
+				else {
+					if(sb.getGroupByColumnReferences()!=null) {
+						//projectItems.add(td.nameToId(columnVisitor.getColumn()));
+						r=r.aggregate(columnVisitor.getOp(), true);
+					}
+					else {
+						r.aggregate(columnVisitor.getOp(), false);
+					}
+				}
 			}
 			r.project(projectItems);
 		}
 		
 		WhereExpressionVisitor whereExpressionVisitor = new WhereExpressionVisitor();
-		//PlainSelect sb2 = (PlainSelect)sb.getWhere();
 		if(sb.getWhere()!=null) {
 			sb.getWhere().accept(whereExpressionVisitor);
 			r=r.select(td.nameToId(whereExpressionVisitor.getLeft()), whereExpressionVisitor.getOp(), whereExpressionVisitor.getRight());
