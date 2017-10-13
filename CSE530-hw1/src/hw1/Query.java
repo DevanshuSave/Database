@@ -42,7 +42,6 @@ public class Query {
 		PlainSelect sb = (PlainSelect)selectStatement.getSelectBody();
 		//your code here
 		
-		((SelectExpressionItem) sb.getSelectItems().get(0)).getAlias();
 		List<SelectItem> items = sb.getSelectItems();
 		System.out.println("xxxx"+items);
 		
@@ -104,16 +103,14 @@ public class Query {
 			}
 		}
 		ArrayList<Integer> projectItems = new ArrayList<>();
-		for(SelectItem i : items) {
-			ColumnVisitor columnVisitor = new ColumnVisitor();
-			i.accept(columnVisitor);
-			projectItems.add(td.nameToId(columnVisitor.getColumn()));
+		if(!items.get(0).toString().equals("*")) {
+			for(SelectItem i : items) {
+				ColumnVisitor columnVisitor = new ColumnVisitor();
+				i.accept(columnVisitor);
+				projectItems.add(td.nameToId(columnVisitor.getColumn()));
+			}
+			r.project(projectItems);
 		}
-		
-		
-		//if(r.getDesc().equals(td)) {
-		r.project(projectItems);
-		//}
 		
 		WhereExpressionVisitor whereExpressionVisitor = new WhereExpressionVisitor();
 		//PlainSelect sb2 = (PlainSelect)sb.getWhere();

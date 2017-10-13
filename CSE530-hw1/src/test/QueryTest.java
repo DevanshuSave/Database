@@ -75,7 +75,7 @@ public class QueryTest {
 		assert(r.getTuples().size() == 5);
 		assert(r.getDesc().getSize() == 141);
 	}
-	/*
+	
 	@Test
 	public void testAggregate() {
 		Query q = new Query("SELECT SUM(a2) FROM A");
@@ -102,5 +102,5 @@ public class QueryTest {
 		assertTrue(r.getTuples().size() == 8);
 		assertTrue(r.getDesc().getSize() == 8);
 	}
-	*/
+	
 }
