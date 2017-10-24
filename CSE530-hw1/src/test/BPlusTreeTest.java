@@ -29,8 +29,8 @@ public class BPlusTreeTest {
 		assertTrue(l.getEntries().get(0).getField().equals(new IntField(4)));
 		assertTrue(l.getEntries().get(1).getField().equals(new IntField(9)));
 
-		assertTrue(l.getEntries().get(0).getPage() == 0);
 		assertTrue(l.getEntries().get(0).getPage() == 1);
+		assertTrue(l.getEntries().get(1).getPage() == 0);
 
 
 	}
