@@ -42,7 +42,7 @@ public class QueryTest {
 		System.out.println("Simpleteststarts");
 		Query q = new Query("SELECT a1, a2 FROM A");
 		Relation r = q.execute();
-		
+		//System.out.println(r.toString());
 		assertTrue(r.getTuples().size() == 8);
 		assertTrue(r.getDesc().getSize() == 8);
 	}
@@ -51,7 +51,7 @@ public class QueryTest {
 	public void testSelect() {
 		Query q = new Query("SELECT a1, a2 FROM A WHERE a1 = 530");
 		Relation r = q.execute();
-		
+		System.out.println(r.toString());
 		assert(r.getTuples().size() == 5);
 		assert(r.getDesc().getSize() == 8);
 	}
@@ -80,9 +80,9 @@ public class QueryTest {
 		System.out.println("****************************");
 		Query q = new Query("SELECT SUM(a2) FROM A");
 		Relation r = q.execute();
-		System.out.println("anaaaaaaaaaaaaaaaaaakit"+r.getTuples().size());
+		System.out.println("----------"+r.toString());
 		assertTrue(r.getTuples().size() == 1);
-		IntField agg = (IntField)(r.getTuples().get(0).getField(0));
+		IntField agg = new IntField((r.getTuples().get(0).getField(0)).toByteArray());
 		assertTrue(agg.getValue() == 36);
 	}
 	

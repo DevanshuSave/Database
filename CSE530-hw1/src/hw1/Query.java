@@ -123,7 +123,7 @@ public class Query {
 					}
 				}
 			}
-			r.project(projectItems);
+			r=r.project(projectItems);
 		}
 		
 		WhereExpressionVisitor whereExpressionVisitor = new WhereExpressionVisitor();
