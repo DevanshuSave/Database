@@ -204,7 +204,7 @@ public class BPlusTreeTest {
 
 		//get left node's children, verify
 		Node ll = cl.get(0);
-		Node lr = cl.get(2);
+		Node lr = cl.get(1);
 
 		assertTrue(ll.isLeafNode());
 		assertTrue(lr.isLeafNode());
