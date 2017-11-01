@@ -29,8 +29,8 @@ public class BPlusTreeTest {
 		assertTrue(l.getEntries().get(0).getField().equals(new IntField(4)));
 		assertTrue(l.getEntries().get(1).getField().equals(new IntField(9)));
 
-		assertTrue(l.getEntries().get(0).getPage() == 0);
 		assertTrue(l.getEntries().get(0).getPage() == 1);
+		assertTrue(l.getEntries().get(1).getPage() == 0);
 
 
 	}
@@ -204,7 +204,7 @@ public class BPlusTreeTest {
 
 		//get left node's children, verify
 		Node ll = cl.get(0);
-		Node lr = cl.get(2);
+		Node lr = cl.get(1);
 
 		assertTrue(ll.isLeafNode());
 		assertTrue(lr.isLeafNode());
@@ -242,6 +242,6 @@ public class BPlusTreeTest {
 
 		ArrayList<Entry> err = rrl.getEntries();
 
-		assertTrue(err.get(1).getField().equals(new IntField(12)));
+		assertTrue(err.get(0).getField().equals(new IntField(12)));
 	}
 }
