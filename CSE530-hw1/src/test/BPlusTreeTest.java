@@ -242,6 +242,6 @@ public class BPlusTreeTest {
 
 		ArrayList<Entry> err = rrl.getEntries();
 
-		assertTrue(err.get(1).getField().equals(new IntField(12)));
+		assertTrue(err.get(0).getField().equals(new IntField(12)));
 	}
 }
