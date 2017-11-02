@@ -1,3 +1,5 @@
+//Devanshu Save
+
 package hw3;
 
 import java.util.ArrayList;
@@ -23,14 +25,29 @@ public class InnerNode implements Node {
 		return this.keys;
 	}
 	
+	//Method added by Devanshu
+	public void setKeys(ArrayList<Field> arrayList) {
+		this.keys = arrayList;
+	}
+	
 	public ArrayList<Node> getChildren() {
 		//your code here
 		return this.children;
 	}
 
+	//Method added by Devanshu
+	public void setChildren(ArrayList<Node> arrayList) {
+		this.children = arrayList;
+	}
+
 	public int getDegree() {
 		//your code here
 		return this.degree;
+	}
+	
+	//Method added by Devanshu	
+	public void setDegree(int deg) {
+		this.degree = deg;
 	}
 	
 	public boolean isLeafNode() {
