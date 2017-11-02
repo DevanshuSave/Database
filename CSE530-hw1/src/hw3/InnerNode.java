@@ -9,9 +9,9 @@ import hw1.Field;
 public class InnerNode implements Node {
 	
 	//Create variables
-	int degree;
-	ArrayList<Node> children;
-	ArrayList<Field> keys;
+	private int degree;
+	private ArrayList<Node> children;
+	private ArrayList<Field> keys;
 	
 	public InnerNode(int degree) {
 		//your code here

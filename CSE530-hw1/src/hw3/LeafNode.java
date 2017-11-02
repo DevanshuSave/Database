@@ -6,8 +6,8 @@ import java.util.ArrayList;
 
 public class LeafNode implements Node {
 	
-	int degree;
-	ArrayList<Entry> entries;
+	private int degree;
+	private ArrayList<Entry> entries;
 	
 	public LeafNode(int degree) {
 		//your code here

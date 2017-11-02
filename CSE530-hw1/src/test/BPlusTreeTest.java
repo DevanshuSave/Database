@@ -32,7 +32,6 @@ public class BPlusTreeTest {
 		assertTrue(l.getEntries().get(0).getPage() == 1);
 		assertTrue(l.getEntries().get(1).getPage() == 0);
 
-
 	}
 
 	@Test
