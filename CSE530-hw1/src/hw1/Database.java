@@ -1,8 +1,6 @@
 //Devanshu Save
 package hw1;
 
-import java.io.*;
-
 /** Database is a class that initializes a static
     variable used by the database system (the catalog)
     
