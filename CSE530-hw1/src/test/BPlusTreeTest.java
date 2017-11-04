@@ -19,6 +19,7 @@ public class BPlusTreeTest {
 
 	@Test
 	public void testSimpleInsert() {
+		System.out.println("Test Simple Insert----------------");
 		BPlusTree bt = new BPlusTree(2);
 		bt.insert(new Entry(new IntField(9), 0));
 		bt.insert(new Entry(new IntField(4), 1));
@@ -38,6 +39,7 @@ public class BPlusTreeTest {
 	public void testComplexInsert() {
 
 		//create a tree, insert a bunch of values
+		System.out.println("Test Complex Insert----------------");
 		BPlusTree bt = new BPlusTree(2);
 		bt.insert(new Entry(new IntField(9), 0));
 		bt.insert(new Entry(new IntField(4), 0));
@@ -132,6 +134,7 @@ public class BPlusTreeTest {
 	@Test
 	public void testSearch() {
 		//create a tree, insert a bunch of values
+		System.out.println("Test Search----------------");
 		BPlusTree bt = new BPlusTree(2);
 		bt.insert(new Entry(new IntField(9), 0));
 		bt.insert(new Entry(new IntField(4), 0));
@@ -155,10 +158,10 @@ public class BPlusTreeTest {
 
 	}
 
-	@Test
+	//@Test
 	public void testDelete() {
 		//Create a tree, then delete some values
-
+		System.out.println("Test Delete----------------");
 		BPlusTree bt = new BPlusTree(2);
 		bt.insert(new Entry(new IntField(9), 0));
 		bt.insert(new Entry(new IntField(4), 0));
