@@ -54,4 +54,17 @@ public class InnerNode implements Node {
 		return false;
 	}
 
+	@Override
+	public boolean equals(Node node) {
+		if(this.getDegree()!=((InnerNode)node).getDegree()) {
+			return false;
+		}
+		if(this.getChildren()!=((InnerNode)node).getChildren()) {
+			return false;
+		}
+		if(this.getKeys()!=((InnerNode)node).getKeys()) {
+			return false;
+		}
+		return false;
+	}
 }

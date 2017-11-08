@@ -38,5 +38,15 @@ public class LeafNode implements Node {
 	public boolean isLeafNode() {
 		return true;
 	}
-
+	
+	
+	public boolean equals(Node node) {
+		if(this.getDegree()!=((LeafNode)node).getDegree()) {
+			return false;
+		}
+		if(this.getEntries()!=((LeafNode)node).getEntries()) {
+			return false;
+		}
+		return true;
+	}
 }

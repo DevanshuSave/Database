@@ -33,7 +33,6 @@ public class BPlusTree {
     	else {
     		node = (InnerNode)root;
     	}
-    	int x = 0;
     	while(!node.isLeafNode()) {
     		//int q = ((InnerNode)node).getChildren().size();
     		ArrayList<Field> keys = ((InnerNode)node).getKeys();
@@ -113,6 +112,7 @@ public class BPlusTree {
     		ArrayList<Entry> entries = new ArrayList<>();
     		entries.add(e);
     		((LeafNode)root).setEntries(entries);
+    		
     		/*if(root ==null) {
     			System.out.println("lol");
     		}
@@ -137,6 +137,7 @@ public class BPlusTree {
     			return;
     		}
     	//}
+    		
     	//Root has max entries
     	//if(getRoot().isLeafNode()) {
     		//if(((LeafNode)getRoot()).getEntries().size()==getDegree()) {
@@ -167,7 +168,7 @@ public class BPlusTree {
     	}
     	System.out.println("Entry4:"+e.getField());
     	System.out.println("keys in root:"+((InnerNode)getRoot()).getKeys().toString());
-    	//Search the leafNode 
+    	//Search the leafNode
     	Node node = new InnerNode(getDegree());
     	((InnerNode)node).setKeys(((InnerNode)root).getKeys());
     	((InnerNode)node).setChildren(((InnerNode)root).getChildren());
@@ -303,6 +304,8 @@ public class BPlusTree {
 			lf1.setEntries(new ArrayList<Entry>(arrayList.subList(0, (arrayList.size()+1)/2)));
 			lf2.setEntries(new ArrayList<Entry>(arrayList.subList((arrayList.size()+1)/2, arrayList.size())));
     		//Parent node exists
+			//LeafNode n = new LeafNode(getDegree());
+			//n.setEntries(((LeafNode)node).getEntries());
 			LeafNode n = (LeafNode)node;
 			node = stack.peek();
 			System.out.println("xxx"+((InnerNode)node).getChildren().size());
@@ -361,7 +364,8 @@ public class BPlusTree {
 	    			
 	    			if(flag) {
 	    				System.out.println("yo");
-		    			ArrayList<Node> child = ((InnerNode)node).getChildren();
+		    			ArrayList<Node> child = new ArrayList<Node>();
+		    			child.addAll(((InnerNode)node).getChildren());
 		    			int num = child.indexOf(n);
 						child.add(num,lf1);
 						child.add(num+1,lf2);
@@ -370,7 +374,7 @@ public class BPlusTree {
 						ArrayList<Field> fff = ((InnerNode)node).getKeys();
 						//fff.remove(num);
 						((InnerNode)node).setKeys(addAndSortField(fff, lf1.getEntries().get(lf1.getEntries().size()-1).getField()));
-						System.out.println("mmmmmmmmmmmmmmmmmmmmmmmmmmm"+((InnerNode)node).getKeys().toString());
+						System.out.println("mmmmmmmmmmmm"+((InnerNode)node).getKeys().toString());
 		    			flag=false;
 	    			}
 	    			
@@ -380,10 +384,14 @@ public class BPlusTree {
 					System.out.println("children count"+temp.getChildren().size());
 					temp.setKeys(((InnerNode)node).getKeys());*/
 					//ArrayList<Field> arrayList1 = temp.getKeys();
+	    			
+	    			
 					InnerNode i1 = new InnerNode(getDegree());
 					InnerNode i2 = new InnerNode(getDegree());
-					ArrayList<Field> iKeys = (((InnerNode)node).getKeys());
-					ArrayList<Node> iChildren = (((InnerNode)node).getChildren());
+					ArrayList<Field> iKeys = new ArrayList<Field>();
+					iKeys.addAll(((InnerNode)node).getKeys());
+					ArrayList<Node> iChildren = new ArrayList<Node>();
+					iChildren.addAll(((InnerNode)node).getChildren());
 	    			
 					//node = (new InnerNode(getDegree()));
 	    			
@@ -393,10 +401,17 @@ public class BPlusTree {
 					System.out.println("i2:"+i2.getKeys().toString());
 	    			i1.setChildren(new ArrayList<Node>(iChildren.subList(0, (iChildren.size()+1)/2)));
 	    			i2.setChildren(new ArrayList<Node>(iChildren.subList((iChildren.size()+1)/2, iChildren.size())));
+
+	    			/*for(int i =0;i<i1.getKeys().size();i++) {
+	    				if(i>=i1.getChildren().size()-1) {
+	    					i1.getKeys().set(i, null);
+	    				}
+	    			}*/
 	    			
-	    			ArrayList<Field> k = new ArrayList<Field>();
+	    			//ArrayList<Field> k = new ArrayList<Field>();
+	    			Field k = i1.getKeys().get((i1.getKeys()).size()-1);
 	    			//k.add(lf2.getEntries().get((lf2.getEntries()).size()-1).getField());
-	    			k.add(i1.getKeys().get((i1.getKeys()).size()-1));
+	    			//k.add(i1.getKeys().get((i1.getKeys()).size()-1));
 	    			
 	    			
 	    			iKeys = i1.getKeys();
@@ -405,12 +420,20 @@ public class BPlusTree {
 	    			ArrayList<Node> child1 = new ArrayList<Node>();
 	    			child1.add(i1);
 	    			child1.add(i2);
+	    			
 	    			((InnerNode)node).setChildren(child1);
-	    			
-	    			
-	    			System.out.println("yoyoyoy"+i1.getKeys().get((i1.getKeys()).size()-1));
-	    			((InnerNode)node).setKeys(null);
-	    			((InnerNode)node).setKeys(k);
+	    			if(stack.size()!=0) {
+		    			((InnerNode)stack.peek()).setKeys(addAndSortField(((InnerNode)stack.peek()).getKeys(), k));
+	    			}
+	    			//System.out.println("yoyoyoy"+i1.getKeys().get((i1.getKeys()).size()-1));
+	    			else {
+	    				((InnerNode)node).setChildren(child1);
+	    				((InnerNode)node).setKeys(null);
+	    				ArrayList<Field> kk = new ArrayList<>();
+	    				kk.add(k);
+	    				((InnerNode)node).setKeys(kk);
+	    			}
+	    			//((InnerNode)node).setKeys(addAndSortField(((InnerNode)node).getKeys(), k));
 	    			System.out.println("m herrrrrrrrrrrrrrrreeeeee");
 					System.out.println(((InnerNode)root).getKeys().toString());
 					if(((InnerNode)node).getKeys().size()>getDegree()){
@@ -446,7 +469,7 @@ public class BPlusTree {
     			setRoot((InnerNode)node);
     		}
     	}
-    	printTree();
+    	//printTree();
     }
     
     public void printTree() {
@@ -464,17 +487,100 @@ public class BPlusTree {
     
     public void delete(Entry e) {
     	//your code here
-    	LeafNode leafNode = search(e.getField());
-    	if(leafNode!=null) {
-    		System.out.println("inside delete: node not found");
+    	if(getRoot()==null) {
+    		return;
     	}
+    	
+    	if(search(e.getField())==null) {
+    		System.out.println("inside delete: node not found");
+    		return;
+    	}
+    	
+    	//If tree has only root
+    	if(search(e.getField()).equals(getRoot())) {
+    		ArrayList<Entry> a = ((LeafNode)getRoot()).getEntries();
+    		a.remove(e);
+    		((LeafNode)getRoot()).setEntries(a);
+    		return;
+    	}
+    	
+    	LeafNode leafNode = search(e.getField());
+    	System.out.println(leafNode.getEntries().toString());
     	ArrayList<Entry> entries = leafNode.getEntries();
+    	int n = 0;
     	for (int i=0;i<entries.size();i++) {
-    		if(e.getField()==entries.get(i).getField()) {
-    			entries.remove(i);
+    		if(e.getField().compare(RelationalOperator.EQ, entries.get(i).getField())) {
+    			n=i;
+    			break;
     		}
     	}
-    	leafNode.setEntries(entries);
+    	
+    	System.out.println("Entries size:"+entries.size()+",entries:"+entries.toString());
+    	System.out.println(n);
+    	
+    	//Stack Search and update
+    	Node node = new InnerNode(getDegree());
+    	((InnerNode)node).setKeys(((InnerNode)root).getKeys());
+    	((InnerNode)node).setChildren(((InnerNode)root).getChildren());
+    	Stack<Node> stack = new Stack<Node>();
+    	while(!node.isLeafNode()) {
+    		stack.push(node);
+    		int q = ((InnerNode)node).getChildren().size();
+    		ArrayList<Field> keys = ((InnerNode)node).getKeys();
+    		for (int i=0;i<keys.size();i++) {
+    			if(e.getField().compare(RelationalOperator.LTE, keys.get(i))) {
+    				node = ((InnerNode)node).getChildren().get(i);
+    				break;
+    			}
+				if(e.getField().compare(RelationalOperator.GT, keys.get(keys.size()-1))) {
+    				node = ((InnerNode)node).getChildren().get(q-1);
+    				break;
+    			}
+    		}
+    	}
+    	//Node should be leafnode
+    	if(n==entries.size()-1) {
+    		Field f = entries.get(n-1).getField();
+        	System.out.println("Deleting Last element");
+    		entries.remove(e);
+    		
+        	if(node.equals(leafNode)) {
+        		System.out.println("Yes -------------------------");
+        	}
+        	else {
+        		System.out.println("No----------------------------");
+        	}
+    		
+        	while(!stack.isEmpty()) {
+        		node = stack.pop();
+        		ArrayList<Field> keys = ((InnerNode)node).getKeys();
+        		for(int i=0;i<keys.size();i++) {
+        			if(keys.get(i).compare(RelationalOperator.EQ, e.getField())) {
+        				keys.set(i, f);
+        				break;
+        			}
+        		}
+        	}
+        	return;
+    	}
+    	else {
+    		System.out.println("internal element deleted");
+    		
+    		if(entries.size()<(getDegree()+1)/2) {
+    			//merge
+    			node = stack.pop();
+    			ArrayList<Node> children = ((InnerNode)node).getChildren();
+    			int c = children.indexOf(leafNode);
+    			if(c>0) {
+    				if(((LeafNode)children.get(c-1)).getEntries().size()>(getDegree()+1)/2) {
+    					
+    				}
+    			}
+    		}
+    		entries.remove(e);
+    		leafNode.setEntries(entries);
+    		return;
+    	}
     }
     
     public Node getRoot() {

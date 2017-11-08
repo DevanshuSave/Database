@@ -145,6 +145,8 @@ public class BPlusTreeTest {
 		bt.insert(new Entry(new IntField(1), 0));
 		bt.insert(new Entry(new IntField(3), 0));
 		bt.insert(new Entry(new IntField(10), 0));
+		bt.insert(new Entry(new IntField(5), 0));
+		
 
 		//these values should exist
 		assertTrue(bt.search(new IntField(12)) != null);

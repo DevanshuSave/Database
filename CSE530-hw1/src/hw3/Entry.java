@@ -21,5 +21,4 @@ public class Entry {
 	public int getPage() {
 		return this.page;
 	}
-	
 }

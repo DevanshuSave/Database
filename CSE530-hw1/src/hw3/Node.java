@@ -9,5 +9,5 @@ public interface Node {
 	
 	//Methods added by Devanshu
 	public void setDegree(int degree);
-    public boolean equals(Object node);//Do we need this?
+    public boolean equals(Node node);//Do we need this?
 }
