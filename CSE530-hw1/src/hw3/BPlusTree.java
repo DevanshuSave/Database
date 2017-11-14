@@ -21,6 +21,203 @@ public class BPlusTree {
     	//this.node = root;
     }
     
+    //Method created by Devanshu
+    private Node getLeftSibling(Node n) {
+    	Field f = null;
+    	if(n.isLeafNode()) {
+    		f=((LeafNode)n).getEntries().get(0).getField();
+    	}
+    	else {
+    		f= ((InnerNode)n).getKeys().get(0);
+    	}
+    	InnerNode in = getParent(f);
+    	if (in==null) {
+    		return null;
+    	}
+    	ArrayList<Field> field = in.getKeys();
+    	//First Child has no left sibling
+    	if(f.compare(RelationalOperator.LTE, field.get(0))) {
+    		return null;
+    	}
+		for (int i=1;i<in.getKeys().size();i++) {
+			if(f.compare(RelationalOperator.LTE, field.get(i))) {
+				return in.getChildren().get(i-1);
+			}
+		}
+		if(f.compare(RelationalOperator.GTE, field.get(in.getKeys().size()-1))) {
+			return in.getChildren().get(in.getKeys().size()-1);
+		}
+    	return null;
+    }
+    
+    //Method created by Devanshu
+    private Node getRightSibling(Node n) {
+    	Field f = null;
+    	if(n.isLeafNode()) {
+    		f=((LeafNode)n).getEntries().get(0).getField();
+    	}
+    	else {
+    		f= ((InnerNode)n).getKeys().get(0);
+    	}
+    	InnerNode in = getParent(f);
+    	if (in==null) {
+    		return null;
+    	}
+    	ArrayList<Field> field = in.getKeys();
+    	//First Child has no left sibling
+    	if(f.compare(RelationalOperator.GTE, field.get(in.getKeys().size()-1))) {
+    		return null;
+    	}
+		for (int i=0;i<in.getKeys().size();i++) {
+			if(f.compare(RelationalOperator.LTE, field.get(i))) {
+				return in.getChildren().get(i+1);
+			}
+		}
+    	return null;
+    }
+    
+    //Method created by Devanshu
+    private InnerNode getParent(Field f) {
+    	if (getRoot()==null) {
+    		return null;
+    	}
+    	Node node;
+    	if(getRoot().isLeafNode()) {
+    		node = getRoot();
+    	}
+    	else {
+    		node = getRoot();
+    	}
+    	Stack<InnerNode> s = new Stack<InnerNode>();
+    	while(!node.isLeafNode()) {
+    		s.push((InnerNode)node);
+    		ArrayList<Field> keys = ((InnerNode)node).getKeys();
+    		for (int i=0;i<keys.size();i++) {
+    			if(f.compare(RelationalOperator.LTE, keys.get(i))) {
+    				node = ((InnerNode)node).getChildren().get(i);
+    				break;
+    			}
+				if(f.compare(RelationalOperator.GT, keys.get(keys.size()-1))) {
+    				node = (((InnerNode)node).getChildren().get((((InnerNode)node).getChildren()).size()-1));
+    				break;
+    			}
+    		}
+    	}
+		ArrayList<Entry> entries = ((LeafNode)node).getEntries();
+		for (Entry entry : entries) {
+			if(f.compare(RelationalOperator.EQ, entry.getField())) {
+				return s.pop();
+			}
+		}
+    	return null;
+    }
+    
+    //Method created by Devanshu
+    private ArrayList<LeafNode> split(LeafNode lf){
+    	ArrayList<LeafNode> leafs = new ArrayList<LeafNode>();
+    	LeafNode lf1 = new LeafNode(getDegree());
+    	LeafNode lf2 = new LeafNode(getDegree());
+    	ArrayList<Entry> en1 = new ArrayList<Entry>(getDegree());
+    	ArrayList<Entry> en2 = new ArrayList<Entry>(getDegree());
+    	
+    	int n = lf.getEntries().size();
+    	for(int i=0;i<n;i++) {
+    		if(i<(n+1)/2) {
+    			en1.add(lf.getEntries().get(i));
+    		}
+    		else {
+    			en2.add(lf.getEntries().get(i));
+    		}
+    	}
+    	lf1.setEntries(en1);
+    	lf2.setEntries(en2);
+    	leafs.add(lf1);
+    	leafs.add(lf2);
+    	return leafs;
+    }
+    
+    //Method created by Devanshu
+    private LeafNode merge(LeafNode lf1, LeafNode lf2){
+    	LeafNode lf = new LeafNode(getDegree());
+    	ArrayList<Entry> entries = new ArrayList<Entry>();
+    	entries.addAll(lf1.getEntries());
+    	entries.addAll(lf2.getEntries());
+    	lf.setEntries(entries);
+    	return lf;
+    }
+    
+    //Method created by Devanshu
+    private ArrayList<InnerNode> split(InnerNode in){
+    	//Node has degree+2 children(1 extra child)
+    	
+    	ArrayList<InnerNode> inners = new ArrayList<InnerNode>();
+    	InnerNode in1 = new InnerNode(getDegree());
+    	InnerNode in2 = new InnerNode(getDegree());
+    	int n;
+    	//boolean isChildLeaf = in.getChildren().get(0).isLeafNode();
+    	
+    	//Keys
+    	ArrayList<Field> k1 = new ArrayList<Field>(getDegree());
+    	ArrayList<Field> k2 = new ArrayList<Field>(getDegree());
+    	n = in.getKeys().size();
+    	for(int i=0;i<n;i++) {
+    		if(i<(n+1)/2) {
+    			k1.add(in.getKeys().get(i));
+    		}
+    		else {
+    			k2.add(in.getKeys().get(i));
+    		}
+    	}
+    	if(n%2==1) {
+    		k1.remove(k1.size()-1);
+    	}
+    	in1.setKeys(k1);
+    	in2.setKeys(k2);
+    	
+    	//Children
+    	ArrayList<Node> c1 = new ArrayList<Node>(getDegree()+1);
+    	ArrayList<Node> c2 = new ArrayList<Node>(getDegree()+1);
+    	n = in.getChildren().size();
+    	for(int i=0;i<n;i++) {
+    		if(i<(n+1)/2) {
+    			c1.add(in.getChildren().get(i));
+    		}
+    		else {
+    			c2.add(in.getChildren().get(i));
+    		}
+    	}
+    	in1.setChildren(c1);
+    	in2.setChildren(c2);
+
+    	inners.add(in1);
+    	inners.add(in2);
+    	return inners;
+    }
+    
+    //Method created by Devanshu
+    private InnerNode merge(InnerNode in1, InnerNode in2){
+    	InnerNode in = new InnerNode(getDegree());
+    	ArrayList<Node> c = new ArrayList<Node>();
+    	c.addAll(in1.getChildren());
+    	c.addAll(in2.getChildren());
+    	in.setChildren(c);
+    	
+    	ArrayList<Field> k = new ArrayList<Field>();
+    	k.addAll(in1.getKeys());
+    	if(in1.getChildren().get(0).isLeafNode()) {
+    		//Extracts largest element of rightmost child (a leafnode) of first innernode which has to be added in the new list of keys
+    		k.add(((LeafNode)in1.getChildren().get(in1.getChildren().size()-1)).getEntries().get(((LeafNode)in1.getChildren().get(in1.getChildren().size()-1)).getEntries().size()-1).getField());
+    	}
+    	else {
+    		//Extracts largest element of rightmost child (an innernode) of first innernode which has to be added in the new list of keys
+    		k.add(((InnerNode)in1.getChildren().get(in1.getChildren().size()-1)).getKeys().get(((InnerNode)in1.getChildren().get(in1.getChildren().size()-1)).getKeys().size()-1));
+    	}
+    	
+    	k.addAll(in2.getKeys());
+    	in.setKeys(k);
+    	return in;
+    }
+    
     public LeafNode search(Field f) {
     	//your code here
     	if (root==null) {
@@ -56,7 +253,6 @@ public class BPlusTree {
     	return null;
     }
     
-    
     //Method created by Devanshu
     private LeafNode getLeaf(Field f) {
     	Node node = root;
@@ -80,6 +276,7 @@ public class BPlusTree {
     	return (LeafNode)node;
     }
     
+    //Method created by Devanshu
     private ArrayList<Entry> addAndSort(ArrayList<Entry> myList, Entry entry) {
     	for(Entry e : myList) {
     		if(entry.getField().compare(RelationalOperator.LT, e.getField())) {
@@ -91,6 +288,7 @@ public class BPlusTree {
     	return myList;
     }
     
+    //Method created by Devanshu
     private ArrayList<Field> addAndSortField(ArrayList<Field> myList, Field field) {
     	for(Field e : myList) {
     		if(field.compare(RelationalOperator.LT, e)) {
@@ -315,15 +513,6 @@ public class BPlusTree {
 				//System.out.println("my size:"+arrayList.size()+":"+(lf1.getEntries()).size()+":"+(lf2.getEntries()).size());
 	    		
 				ArrayList<Node> child = ((InnerNode)node).getChildren();
-				/*
-				System.out.println("# children:"+((InnerNode)node).getChildren().size());
-				System.out.println("aaaaaaaaaaaaaaaaaaaa");
-				for(int i=0;i<child.size();i++) {
-					for(int j=0;j<((LeafNode)child.get(i)).getEntries().size();j++) {
-						System.out.println(i+":"+j+":"+((LeafNode)child.get(i)).getEntries().get(j).getField());
-					}
-				}
-				*/
 				child.add(child.indexOf(n),lf1);
 				child.add(child.indexOf(n),lf2);
 				child.remove(n);
@@ -332,28 +521,6 @@ public class BPlusTree {
 				((InnerNode)node).setKeys(addAndSortField(((InnerNode)node).getKeys(), lf1.getEntries().get(lf1.getEntries().size()-1).getField()));
 				System.out.println("am i here");
 				return;
-				/*
-				System.out.println("bbbbbbbbbbbbbbbbbbb");
-				for(int i=0;i<child.size();i++) {
-					for(int j=0;j<((LeafNode)child.get(i)).getEntries().size();j++) {
-						System.out.println(i+":"+j+":"+((LeafNode)child.get(i)).getEntries().get(j).getField());
-					}
-				}
-				*/
-				/*
-				((InnerNode)node).setKeys(addAndSortField(((InnerNode)node).getKeys(), en.get(en.size()-1).getField()));
-				
-				ArrayList<Field> keys = ((InnerNode)node).getKeys();
-	    		for(int i = 0;i<keys.size();i++) {
-	    			if(en.get(en.size()-1).getField().compare(RelationalOperator.LT, keys.get(i))) {
-	    				keys.add(i, en.get(en.size()-1).getField());
-	    				break;
-	    			}
-	    		}
-	    		((InnerNode)node).setKeys(keys);
-	    		
-	    		finished = true;
-	    		*/
 			}
 			//Parent Node is full
     		
@@ -378,14 +545,6 @@ public class BPlusTree {
 		    			flag=false;
 	    			}
 	    			
-    				//while(((InnerNode)node).getChildren().size()==((InnerNode)node).getDegree()) {
-					/*InnerNode temp = new InnerNode(node.getDegree()+1);
-					temp.setChildren(((InnerNode)node).getChildren());
-					System.out.println("children count"+temp.getChildren().size());
-					temp.setKeys(((InnerNode)node).getKeys());*/
-					//ArrayList<Field> arrayList1 = temp.getKeys();
-	    			
-	    			
 					InnerNode i1 = new InnerNode(getDegree());
 					InnerNode i2 = new InnerNode(getDegree());
 					ArrayList<Field> iKeys = new ArrayList<Field>();
@@ -402,11 +561,6 @@ public class BPlusTree {
 	    			i1.setChildren(new ArrayList<Node>(iChildren.subList(0, (iChildren.size()+1)/2)));
 	    			i2.setChildren(new ArrayList<Node>(iChildren.subList((iChildren.size()+1)/2, iChildren.size())));
 
-	    			/*for(int i =0;i<i1.getKeys().size();i++) {
-	    				if(i>=i1.getChildren().size()-1) {
-	    					i1.getKeys().set(i, null);
-	    				}
-	    			}*/
 	    			
 	    			//ArrayList<Field> k = new ArrayList<Field>();
 	    			Field k = i1.getKeys().get((i1.getKeys()).size()-1);
@@ -439,32 +593,6 @@ public class BPlusTree {
 					if(((InnerNode)node).getKeys().size()>getDegree()){
 						System.out.println("alert"+e.getField());
 					}
-					/*
-					for(Field field : arrayList1) {
-						if(field.compare(RelationalOperator.LT, lf1.getEntries().get(lf1.getEntries().size()-1).getField())){
-							arrayList1.add(lf1.getEntries().get(lf1.getEntries().size()-1).getField());
-							break;
-						}
-					}
-					if(!arrayList1.contains(lf1.getEntries().get(lf1.getEntries().size()-1).getField())) {
-						arrayList1.add(lf1.getEntries().get(lf1.getEntries().size()-1).getField());
-					}
-					temp.setKeys(arrayList1);
-					*/
-    				//}
-		    		/*
-		    		for (i=0;i<arrayList.size();i++) {
-		    			if(i<(arrayList.size()+1)/2) {
-		    				en2.add(arrayList.get(i));
-		    			}
-		    			else {
-		    				en3.add(arrayList.get(i));
-		    			}
-		    		}
-		    		
-		    		((InnerNode)node).setEntries(en2);
-		    		((LeafNode)lf).setEntries(en3);
-		    		*/
     			}
     			setRoot((InnerNode)node);
     		}
@@ -472,7 +600,8 @@ public class BPlusTree {
     	//printTree();
     }
     
-    public void printTree() {
+    //Method created by Devanshu
+    private void printTree() {
     	System.out.println("Printing tree");
     	for(int i=0;i<((InnerNode)getRoot()).getChildren().size();i++) {
     		System.out.println(((InnerNode)getRoot()).getKeys().toString());
@@ -483,40 +612,229 @@ public class BPlusTree {
 			}
 		}
     }
-    
+
+    //Method created by Devanshu
+    private void borrow(LeafNode child, InnerNode parent, LeafNode sibling) {
+    	if(getLeftSibling(child).equals(sibling)) {
+    		//Left sibling - borrow last
+    		ArrayList<Entry> en = new ArrayList<Entry>(getDegree());
+    		en.add(sibling.getEntries().get(sibling.getEntries().size()-1));
+    		en.addAll(child.getEntries());
+    		child.setEntries(en);
+    		
+    		en.clear();
+    		en.addAll(sibling.getEntries());
+    		en.remove(en.size()-1);
+    		sibling.setEntries(en);
+    		
+    		ArrayList<Field> key = new ArrayList<Field>(getDegree());
+    		key.addAll(parent.getKeys());
+    		key.add(key.indexOf(child.getEntries().get(0).getField()),sibling.getEntries().get(sibling.getEntries().size()-1).getField());
+    		key.remove(child.getEntries().get(0).getField());
+    		parent.setKeys(key);
+    		return;
+    	}
+    	else {
+    		//Right sibling - borrow first
+    		ArrayList<Entry> en = new ArrayList<Entry>(getDegree());
+    		en.addAll(child.getEntries());
+    		en.add(sibling.getEntries().get(0));
+    		child.setEntries(en);
+    		
+    		en.clear();
+    		en.addAll(sibling.getEntries());
+    		en.remove(0);
+    		sibling.setEntries(en);
+    		
+    		ArrayList<Field> key = new ArrayList<Field>(getDegree());
+    		key.addAll(parent.getKeys());
+    		key.add(key.indexOf(child.getEntries().get(child.getEntries().size()-1).getField()), sibling.getEntries().get(0).getField());
+    		key.remove(child.getEntries().get(child.getEntries().size()-1).getField());
+    		parent.setKeys(key);
+    		return;
+    	}
+    }
+ 
+  //Method created by Devanshu
+    private void borrow(InnerNode child, InnerNode parent, InnerNode sibling) {
+    	if(getLeftSibling(child).equals(sibling)) {
+    		//Left sibling - borrow last
+    		ArrayList<Node> en = new ArrayList<Node>(getDegree());
+    		en.add(sibling.getChildren().get(sibling.getChildren().size()-1));
+    		en.addAll(child.getChildren());
+    		child.setChildren(en);
+    		
+    		en.clear();
+    		en.addAll(sibling.getChildren());
+    		en.remove(en.size()-1);
+    		sibling.setChildren(en);
+    		
+    		ArrayList<Field> key = new ArrayList<Field>(getDegree());
+    		key.addAll(parent.getKeys());
+    		key.add(key.indexOf(child.getKeys().get(0)),sibling.getKeys().get(sibling.getKeys().size()-1));
+    		key.remove(child.getKeys().get(0));
+    		parent.setKeys(key);
+    		return;
+    	}
+    	else {
+    		//Right sibling - borrow first
+    		ArrayList<Node> en = new ArrayList<Node>(getDegree());
+    		en.addAll(child.getChildren());
+    		en.add(sibling.getChildren().get(0));
+    		child.setChildren(en);
+    		
+    		en.clear();
+    		en.addAll(sibling.getChildren());
+    		en.remove(0);
+    		sibling.setChildren(en);
+    		
+    		ArrayList<Field> key = new ArrayList<Field>(getDegree());
+    		key.addAll(parent.getKeys());
+    		key.add(key.indexOf(child.getKeys().get(child.getKeys().size()-1)), sibling.getKeys().get(0));
+    		key.remove(child.getKeys().get(child.getKeys().size()-1));
+    		parent.setKeys(key);
+    		return;
+    	}
+    }
+ 
     
     public void delete(Entry e) {
     	//your code here
-    	if(getRoot()==null) {
+    	System.out.println("Deleting element here-----------------------:"+e.getField());
+    	LeafNode leafNode = new LeafNode(getDegree());
+    	leafNode = search(e.getField());
+    	if(leafNode==null) {
+    		//System.out.println("inside delete: node not found");
     		return;
     	}
     	
-    	if(search(e.getField())==null) {
-    		System.out.println("inside delete: node not found");
+    	ArrayList<Entry> entries = new ArrayList<Entry>();
+    	entries = leafNode.getEntries();
+    	
+    	//If tree has only root (and search is not null hence entry exists in root)
+    	if(getRoot().isLeafNode()) {
+    		entries.remove(e);
+    		if(entries.equals(null)) {
+    			setRoot(null);
+    			return;
+    		}
+    		leafNode.setEntries(entries);
     		return;
     	}
     	
-    	//If tree has only root
-    	if(search(e.getField()).equals(getRoot())) {
-    		ArrayList<Entry> a = ((LeafNode)getRoot()).getEntries();
-    		a.remove(e);
-    		((LeafNode)getRoot()).setEntries(a);
-    		return;
-    	}
-    	
-    	LeafNode leafNode = search(e.getField());
-    	System.out.println(leafNode.getEntries().toString());
-    	ArrayList<Entry> entries = leafNode.getEntries();
+    	Field f = e.getField();
+    	Field replace = null;
     	int n = 0;
     	for (int i=0;i<entries.size();i++) {
-    		if(e.getField().compare(RelationalOperator.EQ, entries.get(i).getField())) {
+    		if(f.compare(RelationalOperator.EQ, entries.get(i).getField())) {
     			n=i;
+    			if (i==entries.size()-1 && i>0){
+    				replace = entries.get(i-1).getField();
+    			}
+    			entries.remove(e);
     			break;
     		}
     	}
     	
-    	System.out.println("Entries size:"+entries.size()+",entries:"+entries.toString());
-    	System.out.println(n);
+    	InnerNode in = null;
+    	//no underflow    	
+    	if(entries.size()>=(getDegree()+1)/2) {
+    		if(n!=entries.size()) {
+    			leafNode.setEntries(entries);
+    			return;
+    		}
+    		else {
+    			while(in!=null) {
+    		    	in = getParent(f);
+    	    		if(in.getKeys().contains(f)) {
+    	    			ArrayList<Field> keys = new ArrayList<Field>();
+    	    			keys = in.getKeys();
+    	    			keys.add(keys.indexOf(f),replace);
+    	    			keys.remove(f);
+    	    			in.setKeys(keys);
+    	    			leafNode.setEntries(entries);
+    	    			return;
+    	    		}
+    	    		in = getParent(in.getKeys().get(0));
+    	    	}
+    		}
+    		System.out.println("I am never here");
+    	}
+    	//else: underflow
+    	else {
+    		in = getParent(f);
+    		while(!in.equals(null)) {
+    			ArrayList<Node> c = new ArrayList<Node>(getDegree());
+        		ArrayList<Field> k = new ArrayList<Field>(getDegree());
+        		c = in.getChildren();
+        		k = in.getKeys();
+        		LeafNode lf = new LeafNode(getDegree());
+        		lf = (LeafNode)getLeftSibling(leafNode);
+        		if(lf!=null) {
+        			if(lf.getEntries().size()>=(getDegree()+1)/2) {
+        				
+        			}
+        			else {
+        				lf = null;
+        		}
+        		
+        		if(lf==null) {
+        			lf = ((LeafNode)getRightSibling(leafNode));
+	        		if(lf.getEntries().size()>=(getDegree()+1)/2) {
+	        			
+	        		}
+	        		else {
+	        			lf=null;
+	        		}
+        		}
+        		
+        		
+        		InnerNode sibling = new InnerNode(getDegree());
+    			sibling = (InnerNode) getLeftSibling(in);
+    			if(sibling!=null) {
+	    			if(sibling.getChildren().size()==(getDegree()+2)/2) {
+	    				sibling = (InnerNode) getRightSibling(in);
+	    			}
+	    			else {
+	    				ArrayList<Node> cs = new ArrayList<Node>();
+	    				cs = sibling.getChildren();
+	    				c.add(0, cs.get(cs.size()-1));
+	    				cs.remove(cs.size()-1);
+	    				sibling.setChildren(cs);
+	    				
+	    				ArrayList<Field> ks = new ArrayList<Field>();
+	    				ks = sibling.getKeys();
+	    				//children are always leafnode here
+	    				k.add(0, ((LeafNode)(c.get(0))).getEntries().get(((LeafNode)(c.get(0))).getEntries().size()-1).getField());
+	    				ks.remove(ks.size()-1);
+	    				sibling.setKeys(ks);
+	    			}
+    			}
+        		if(c.size()==(getDegree()+2)/2) {
+        			//underflow in terms of number of children
+    	    			
+        			}
+        			if(sibling!=null) {
+        				if(sibling.getChildren().size()==(getDegree()+2)/2) {
+        					sibling=null;
+        				}
+        				else {
+        					in = merge(sibling, in);
+        				}
+        			}
+        			if(sibling==null) {
+        				//no sibling to merge >>> reduce level
+        			}
+        		}
+        		else {
+        			c.remove(null);
+        			in.setChildren(c);
+        		}
+    		}
+    	}
+    	
+    	leafNode.setEntries(entries);
+    	
     	
     	//Stack Search and update
     	Node node = new InnerNode(getDegree());
@@ -540,7 +858,7 @@ public class BPlusTree {
     	}
     	//Node should be leafnode
     	if(n==entries.size()-1) {
-    		Field f = entries.get(n-1).getField();
+    		Field ff= entries.get(n-1).getField();
         	System.out.println("Deleting Last element");
     		entries.remove(e);
     		
@@ -556,7 +874,7 @@ public class BPlusTree {
         		ArrayList<Field> keys = ((InnerNode)node).getKeys();
         		for(int i=0;i<keys.size();i++) {
         			if(keys.get(i).compare(RelationalOperator.EQ, e.getField())) {
-        				keys.set(i, f);
+        				keys.set(i, ff);
         				break;
         			}
         		}
@@ -583,6 +901,7 @@ public class BPlusTree {
     	}
     }
     
+    //Method created by Devanshu
     public Node getRoot() {
     	//your code here
     	return this.root;
