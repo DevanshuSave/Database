@@ -814,7 +814,6 @@ public class BPlusTree {
     	    			keys.addAll(in.getKeys());
     	    			keys.add(keys.indexOf(f),replace);
     	    			keys.remove(f);
-    	    			System.out.println("sssssss"+keys.toString());
     	    			in.setKeys(keys);//Does not set in the tree - updated: now sets
     	    			leafNode.setEntries(entries);
     	    			return;
@@ -855,6 +854,7 @@ public class BPlusTree {
         			}
         			else {
         				lf = null;
+        			}
         		}
         		
         		if(lf==null) {
@@ -903,7 +903,9 @@ public class BPlusTree {
 	        		in.setKeys(k);
 	        		return;
         		}
-        		else {}
+        		else {
+        			System.out.println("Merge parents");
+        		}
         		/*
         		if(c.size()==(getDegree()+2)/2) {
         			//underflow in terms of number of children
@@ -994,7 +996,6 @@ public class BPlusTree {
     		leafNode.setEntries(entries);
     		}*/
     	
-        		}
     		}
     	}
     	return;

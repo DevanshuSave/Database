@@ -176,6 +176,7 @@ public class BPlusTreeTest {
 		bt.delete(new Entry(new IntField(4), 0));
 		bt.delete(new Entry(new IntField(10), 0));
 		bt.delete(new Entry(new IntField(2), 0));
+		//bt.delete(new Entry(new IntField(1), 0));
 
 		//verify root properties
 		Node root = bt.getRoot();
