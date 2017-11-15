@@ -889,7 +889,10 @@ public class BPlusTree {
 	        		LeafNode sibling = new LeafNode(getDegree());
 	        		sibling = (LeafNode)getLeftSibling(leafNode);
 	        		lfnew = merge(leafNode, sibling);
-	        		
+	        		ArrayList<Entry> temp = new ArrayList<Entry>();
+	        		temp.addAll(sibling.getEntries());
+	        		temp.addAll(entries);
+	        		lfnew.setEntries(temp);
 	        		c.add(c.indexOf(sibling), lfnew);
 	        		c.remove(leafNode);
 	        		c.remove(sibling);
