@@ -1,3 +1,9 @@
+/*
+ * Student 1 name: Devanshu Save
+ * Student 2 name: Saron Belay
+ * Date: 11/16/17
+ */
+
 package hw1;
 
 import java.io.*;
@@ -19,6 +25,21 @@ public class BufferPool {
     other classes. BufferPool should use the numPages argument to the
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
+    
+    private int numPages;
+    private int[][] cache;
+    
+    /*
+    private class Cache{
+    	private int tabId;
+    	private int pageId;
+    	
+    	public Cache(int tid, int pid) {
+    		super();
+    		this.tabId = tid;
+    		this.pageId = pid;
+    	}
+    }*/
 
     /**
      * Creates a BufferPool that caches up to numPages pages.
@@ -27,8 +48,30 @@ public class BufferPool {
      */
     public BufferPool(int numPages) {
         // your code here
+    	this.numPages = numPages;
+    	this.cache = new int[numPages][2];
     }
-
+    
+    //New method added
+    public int getNumPages() {
+    	return this.numPages;
+    }
+    
+    //New method added
+    public void setNumPages(int n) {
+    	this.numPages = n;
+    }
+    
+    //New method added
+    public int[][] getCache() {
+    	return this.cache;
+    }
+    
+    //New method added
+    public void setCache(int[][] c) {
+    	this.cache = c;
+    }
+    
     /**
      * Retrieve the specified page with the associated permissions.
      * Will acquire a lock and may block if that lock is held by another

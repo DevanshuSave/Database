@@ -20,7 +20,6 @@ public class HeapPage {
 	private int tableId;
 
 
-
 	public HeapPage(int id, byte[] data, int tableId) throws IOException {
 		this.id = id;
 		this.tableId = tableId;
