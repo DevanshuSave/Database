@@ -2,109 +2,247 @@ package test;
 
 import static org.junit.Assert.*;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.Iterator;
+import java.util.ArrayList;
 
-import org.junit.Before;
 import org.junit.Test;
 
-import hw1.BufferPool;
-import hw1.Catalog;
-import hw1.Database;
-import hw1.HeapFile;
-import hw1.HeapPage;
-import hw1.Permissions;
-import hw1.Tuple;
-import hw1.TupleDesc;
+import hw1.Field;
+import hw1.IntField;
+import hw1.RelationalOperator;
+import hw3.BPlusTree;
+import hw3.Entry;
+import hw3.InnerNode;
+import hw3.LeafNode;
+import hw3.Node;
 
-public class TransactionTest {
-	
-	private Catalog c;
-	private BufferPool bp;
-	private HeapFile hf;
-	private TupleDesc td;
-	private int tid;
-	
-	@Before
-	public void setup() {
-		
-		try {
-			Files.copy(new File("testfiles/test.dat.bak").toPath(), new File("testfiles/test.dat").toPath(), StandardCopyOption.REPLACE_EXISTING);
-		} catch (IOException e) {
-			System.out.println("unable to copy files");
-			e.printStackTrace();
-		}
-		
-		c = Database.getCatalog();
-		c.loadSchema("testfiles/test.txt");
-		
-		int tableId = c.getTableId("test");
-		td = c.getTupleDesc(tableId);
-		hf = c.getDbFile(tableId);
-		
-		bp = Database.getBufferPool();
-		
-		tid = c.getTableId("test");
-	}
+public class BPlusTreeTest {
+
 	@Test
-	public void testReleaseLocks() throws Exception {
-		bp.getPage(0, tid, 0, Permissions.READ_ONLY);
-	    bp.getPage(0, tid, 0, Permissions.READ_WRITE);
-	    bp.transactionComplete(0, true);
+	public void testSimpleInsert() {
+		BPlusTree bt = new BPlusTree(2);
+		bt.insert(new Entry(new IntField(9), 0));
+		bt.insert(new Entry(new IntField(4), 1));
+		assertTrue(bt.getRoot().isLeafNode());
 
-	    bp.getPage(1, tid, 0, Permissions.READ_WRITE);
-	    bp.getPage(1, tid, 0, Permissions.READ_WRITE);
-	    bp.transactionComplete(1, true);
-	    assertTrue(true); //will only reach this point if locks are properly released
-	}
-	
-	public void testCommit() throws Exception {
-		Tuple t = new Tuple(td);
-		t.setField(0, new byte[] {0, 0, 0, (byte)131});
-		byte[] s = new byte[129];
-		s[0] = 2;
-		s[1] = 98;
-		s[2] = 121;
-		t.setField(1, s);
-		
-		bp.getPage(0, tid, 0, Permissions.READ_WRITE); //acquire lock for the page
-		bp.insertTuple(0, tid, t); //insert the tuple into the page
-		bp.transactionComplete(0, true); //should flush the modified page
-		
-		//reset the buffer pool, get the page again, make sure data is there
-		Database.resetBufferPool(BufferPool.DEFAULT_PAGES);
-		HeapPage hp = bp.getPage(1, tid, 0, Permissions.READ_ONLY);
-		Iterator<Tuple> it = hp.iterator();
-		assertTrue(it.hasNext());
-		it.next();
-		assertTrue(it.hasNext());
-		it.next();
-		assertFalse(it.hasNext());
-	}
-	
-	public void testAbort() throws Exception {
-		Tuple t = new Tuple(td);
-		t.setField(0, new byte[] {0, 0, 0, (byte)131});
-		byte[] s = new byte[129];
-		s[0] = 2;
-		s[1] = 98;
-		s[2] = 121;
-		t.setField(1, s);
-		
-		bp.getPage(0, tid, 0, Permissions.READ_WRITE); //acquire lock for the page
-		bp.insertTuple(0, tid, t); //insert the tuple into the page
-		bp.transactionComplete(0, false); //should abort, discard changes
-		
-		//reset the buffer pool, get the page again, make sure data is there
-		Database.resetBufferPool(BufferPool.DEFAULT_PAGES);
-		HeapPage hp = bp.getPage(1, tid, 0, Permissions.READ_ONLY);
-		Iterator<Tuple> it = hp.iterator();
-		assertTrue(it.hasNext());
-		it.next();
-		assertFalse(it.hasNext());
+		LeafNode l = (LeafNode)bt.getRoot();
+
+		assertTrue(l.getEntries().get(0).getField().equals(new IntField(4)));
+		assertTrue(l.getEntries().get(1).getField().equals(new IntField(9)));
+
+		assertTrue(l.getEntries().get(0).getPage() == 1);
+		assertTrue(l.getEntries().get(1).getPage() == 0);
+
 	}
 
+	@Test
+	public void testComplexInsert() {
+
+		//create a tree, insert a bunch of values
+		BPlusTree bt = new BPlusTree(2);
+		bt.insert(new Entry(new IntField(9), 0));
+		bt.insert(new Entry(new IntField(4), 0));
+		bt.insert(new Entry(new IntField(12), 0));
+		bt.insert(new Entry(new IntField(7), 0));
+		bt.insert(new Entry(new IntField(2), 0));
+		bt.insert(new Entry(new IntField(6), 0));
+		bt.insert(new Entry(new IntField(1), 0));
+		bt.insert(new Entry(new IntField(3), 0));
+		bt.insert(new Entry(new IntField(10), 0));
+
+		//verify root properties
+		Node root = bt.getRoot();
+
+		assertTrue(root.isLeafNode() == false);
+
+		InnerNode in = (InnerNode)root;
+
+		ArrayList<Field> k = in.getKeys();
+		ArrayList<Node> c = in.getChildren();
+
+		assertTrue(k.get(0).compare(RelationalOperator.EQ, new IntField(7)));
+
+		//grab left and right children from root
+		InnerNode l = (InnerNode)c.get(0);
+		InnerNode r = (InnerNode)c.get(1);
+
+		assertTrue(l.isLeafNode() == false);
+		assertTrue(r.isLeafNode() == false);
+
+		//check values in left node
+		ArrayList<Field> kl = l.getKeys();
+		ArrayList<Node> cl = l.getChildren();
+
+		assertTrue(kl.get(0).compare(RelationalOperator.EQ, new IntField(2)));
+		assertTrue(kl.get(1).compare(RelationalOperator.EQ, new IntField(4)));
+
+		//get left node's children, verify
+		Node ll = cl.get(0);
+		Node lm = cl.get(1);
+		Node lr = cl.get(2);
+
+		assertTrue(ll.isLeafNode());
+		assertTrue(lm.isLeafNode());
+		assertTrue(lr.isLeafNode());
+
+		LeafNode lll = (LeafNode)ll;
+		LeafNode lml = (LeafNode)lm;
+		LeafNode lrl = (LeafNode)lr;
+
+		ArrayList<Entry> ell = lll.getEntries();
+
+		assertTrue(ell.get(0).getField().equals(new IntField(1)));
+		assertTrue(ell.get(1).getField().equals(new IntField(2)));
+
+		ArrayList<Entry> elm = lml.getEntries();
+
+		assertTrue(elm.get(0).getField().equals(new IntField(3)));
+		assertTrue(elm.get(1).getField().equals(new IntField(4)));
+
+		ArrayList<Entry> elr = lrl.getEntries();
+
+		assertTrue(elr.get(0).getField().equals(new IntField(6)));
+		assertTrue(elr.get(1).getField().equals(new IntField(7)));
+
+		//verify right node
+		ArrayList<Field> kr = r.getKeys();
+		ArrayList<Node> cr = r.getChildren();
+
+		assertTrue(kr.get(0).compare(RelationalOperator.EQ, new IntField(9)));
+
+		//get right node's children, verify
+		Node rl = cr.get(0);
+		Node rr = cr.get(1);
+
+		assertTrue(rl.isLeafNode());
+		assertTrue(rr.isLeafNode());
+
+		LeafNode rll = (LeafNode)rl;
+		LeafNode rrl = (LeafNode)rr;
+
+		ArrayList<Entry> erl = rll.getEntries();
+
+		assertTrue(erl.get(0).getField().equals(new IntField(9)));
+
+		ArrayList<Entry> err = rrl.getEntries();
+
+		assertTrue(err.get(0).getField().equals(new IntField(10)));
+		assertTrue(err.get(1).getField().equals(new IntField(12)));
+	}
+
+	@Test
+	public void testSearch() {
+		//create a tree, insert a bunch of values
+		BPlusTree bt = new BPlusTree(2);
+		bt.insert(new Entry(new IntField(9), 0));
+		bt.insert(new Entry(new IntField(4), 0));
+		bt.insert(new Entry(new IntField(12), 0));
+		bt.insert(new Entry(new IntField(7), 0));
+		bt.insert(new Entry(new IntField(2), 0));
+		bt.insert(new Entry(new IntField(6), 0));
+		bt.insert(new Entry(new IntField(1), 0));
+		bt.insert(new Entry(new IntField(3), 0));
+		bt.insert(new Entry(new IntField(10), 0));
+		//bt.insert(new Entry(new IntField(5), 0));
+		
+
+		//these values should exist
+		assertTrue(bt.search(new IntField(12)) != null);
+		assertTrue(bt.search(new IntField(3)) != null);
+		assertTrue(bt.search(new IntField(7)) != null);
+
+		//these values should not exist
+		assertTrue(bt.search(new IntField(8)) == null);
+		assertTrue(bt.search(new IntField(11)) == null);
+		assertTrue(bt.search(new IntField(5)) == null);
+
+	}
+
+	@Test
+	public void testDelete() {
+		//Create a tree, then delete some values
+		BPlusTree bt = new BPlusTree(2);
+		bt.insert(new Entry(new IntField(9), 0));
+		bt.insert(new Entry(new IntField(4), 0));
+		bt.insert(new Entry(new IntField(12), 0));
+		bt.insert(new Entry(new IntField(7), 0));
+		bt.insert(new Entry(new IntField(2), 0));
+		bt.insert(new Entry(new IntField(6), 0));
+		bt.insert(new Entry(new IntField(1), 0));
+		bt.insert(new Entry(new IntField(3), 0));
+		bt.insert(new Entry(new IntField(10), 0));
+
+		bt.delete(new Entry(new IntField(7), 0));
+		bt.delete(new Entry(new IntField(3), 0));
+		bt.delete(new Entry(new IntField(4), 0));
+		bt.delete(new Entry(new IntField(10), 0));
+		bt.delete(new Entry(new IntField(2), 0));
+		bt.delete(new Entry(new IntField(1), 0));
+
+		//verify root properties
+		Node root = bt.getRoot();
+
+		assertTrue(root.isLeafNode() == false);
+
+		InnerNode in = (InnerNode)root;
+
+		ArrayList<Field> k = in.getKeys();
+		ArrayList<Node> c = in.getChildren();
+
+		assertTrue(k.get(0).compare(RelationalOperator.EQ, new IntField(6)));
+
+		//grab left and right children from root
+		InnerNode l = (InnerNode)c.get(0);
+		InnerNode r = (InnerNode)c.get(1);
+
+		assertTrue(l.isLeafNode() == false);
+		assertTrue(r.isLeafNode() == false);
+
+		//check values in left node
+		ArrayList<Field> kl = l.getKeys();
+		ArrayList<Node> cl = l.getChildren();
+
+		assertTrue(kl.get(0).compare(RelationalOperator.EQ, new IntField(1)));
+
+		//get left node's children, verify
+		Node ll = cl.get(0);
+		Node lr = cl.get(1);
+
+		assertTrue(ll.isLeafNode());
+		assertTrue(lr.isLeafNode());
+
+		LeafNode lll = (LeafNode)ll;
+		LeafNode lrl = (LeafNode)lr;
+
+		ArrayList<Entry> ell = lll.getEntries();
+
+		assertTrue(ell.get(0).getField().equals(new IntField(1)));
+
+		ArrayList<Entry> elr = lrl.getEntries();
+
+		assertTrue(elr.get(0).getField().equals(new IntField(6)));
+
+		//verify right node
+		ArrayList<Field> kr = r.getKeys();
+		ArrayList<Node> cr = r.getChildren();
+
+		assertTrue(kr.get(0).compare(RelationalOperator.EQ, new IntField(9)));
+
+		//get right node's children, verify
+		Node rl = cr.get(0);
+		Node rr = cr.get(1);
+
+		assertTrue(rl.isLeafNode());
+		assertTrue(rr.isLeafNode());
+
+		LeafNode rll = (LeafNode)rl;
+		LeafNode rrl = (LeafNode)rr;
+
+		ArrayList<Entry> erl = rll.getEntries();
+
+		assertTrue(erl.get(0).getField().equals(new IntField(9)));
+
+		ArrayList<Entry> err = rrl.getEntries();
+
+		assertTrue(err.get(0).getField().equals(new IntField(12)));
+	}
 }

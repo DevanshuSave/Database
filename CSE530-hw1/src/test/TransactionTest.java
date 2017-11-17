@@ -59,6 +59,7 @@ public class TransactionTest {
 
 	    bp.getPage(1, tid, 0, Permissions.READ_WRITE);
 	    bp.getPage(1, tid, 0, Permissions.READ_WRITE);
+	    bp.transactionComplete(1, true);
 	    assertTrue(true); //will only reach this point if locks are properly released
 	}
 	
