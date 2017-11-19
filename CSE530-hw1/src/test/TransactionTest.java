@@ -16,9 +16,7 @@ import hw1.Catalog;
 import hw1.Database;
 import hw1.HeapFile;
 import hw1.HeapPage;
-import hw1.IntField;
 import hw1.Permissions;
-import hw1.StringField;
 import hw1.Tuple;
 import hw1.TupleDesc;
 
@@ -59,18 +57,18 @@ public class TransactionTest {
 
 	    bp.getPage(1, tid, 0, Permissions.READ_WRITE);
 	    bp.getPage(1, tid, 0, Permissions.READ_WRITE);
-	    bp.transactionComplete(1, true);
+		bp.transactionComplete(0, true);
 	    assertTrue(true); //will only reach this point if locks are properly released
 	}
 	
 	public void testCommit() throws Exception {
 		Tuple t = new Tuple(td);
-		t.setField(0, new IntField(new byte[] {0, 0, 0, (byte)131}));
+		t.setField(0, new byte[] {0, 0, 0, (byte)131});
 		byte[] s = new byte[129];
 		s[0] = 2;
 		s[1] = 98;
 		s[2] = 121;
-		t.setField(1, new StringField(s));
+		t.setField(1, s);
 		
 		bp.getPage(0, tid, 0, Permissions.READ_WRITE); //acquire lock for the page
 		bp.insertTuple(0, tid, t); //insert the tuple into the page
@@ -89,12 +87,12 @@ public class TransactionTest {
 	
 	public void testAbort() throws Exception {
 		Tuple t = new Tuple(td);
-		t.setField(0, new IntField(new byte[] {0, 0, 0, (byte)131}));
+		t.setField(0, new byte[] {0, 0, 0, (byte)131});
 		byte[] s = new byte[129];
 		s[0] = 2;
 		s[1] = 98;
 		s[2] = 121;
-		t.setField(1, new StringField(s));
+		t.setField(1, s);
 		
 		bp.getPage(0, tid, 0, Permissions.READ_WRITE); //acquire lock for the page
 		bp.insertTuple(0, tid, t); //insert the tuple into the page

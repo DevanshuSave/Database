@@ -18,11 +18,15 @@ public class HeapPage {
 	private TupleDesc td;
 	private int numSlots;
 	private int tableId;
+	
+	//For HW4
+	boolean dirty;
 
 
 	public HeapPage(int id, byte[] data, int tableId) throws IOException {
 		this.id = id;
 		this.tableId = tableId;
+		this.dirty = false;
 
 		this.td = Database.getCatalog().getTupleDesc(this.tableId);
 		this.numSlots = getNumSlots();
@@ -75,6 +79,16 @@ public class HeapPage {
 		return tuples;
 	}
 	
+	
+	//Created for HW4
+	public boolean isDirty() {
+		return this.dirty;
+	}
+	
+	//Created for HW4
+	public void setDirty(boolean dirty) {
+		this.dirty = dirty;
+	}
 
 	/**
 	 * Checks to see if a slot is occupied or not by checking the header

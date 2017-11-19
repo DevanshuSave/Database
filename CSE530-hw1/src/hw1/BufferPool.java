@@ -7,6 +7,9 @@
 package hw1;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from
@@ -26,21 +29,34 @@ public class BufferPool {
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
     
-    private int numPages;
-    private int[][] cache;
     
-    /*
-    private class Cache{
+    private class CacheKey{
     	private int tabId;
     	private int pageId;
     	
-    	public Cache(int tid, int pid) {
+    	public CacheKey(int tabId, int pageId) {
     		super();
-    		this.tabId = tid;
-    		this.pageId = pid;
+    		this.tabId = tabId;
+    		this.pageId = pageId;
     	}
-    }*/
-
+    }
+    
+    private class CacheValue{
+    	private int transactionId;
+    	private Permissions p;
+    	
+    	public CacheValue(int transactionId, Permissions p) {
+    		super();
+    		this.transactionId = transactionId;
+    		this.p = p;
+    	}
+    }
+    
+    
+    private int numPages;
+    private Map<CacheKey, CacheValue> hm = new HashMap<CacheKey, CacheValue>();
+    private ArrayList<Integer> blocked = new ArrayList<Integer>();
+    
     /**
      * Creates a BufferPool that caches up to numPages pages.
      *
@@ -49,7 +65,6 @@ public class BufferPool {
     public BufferPool(int numPages) {
         // your code here
     	this.numPages = numPages;
-    	this.cache = new int[numPages][2];
     }
     
     //New method added
@@ -63,13 +78,13 @@ public class BufferPool {
     }
     
     //New method added
-    public int[][] getCache() {
-    	return this.cache;
+    public ArrayList<Integer> getBlocked() {
+    	return this.blocked;
     }
     
     //New method added
-    public void setCache(int[][] c) {
-    	this.cache = c;
+    public void setBlocked(ArrayList<Integer> b) {
+    	this.blocked = b;
     }
     
     /**
@@ -91,6 +106,42 @@ public class BufferPool {
     public HeapPage getPage(int tid, int tableId, int pid, Permissions perm)
         throws Exception {
         // your code here
+    	
+    	HeapFile f = Database.getCatalog().getDbFile(tableId);
+    	HeapPage hp = f.readPage(pid);
+    	CacheKey ck = new CacheKey(tableId, pid);
+    	CacheValue cv = hm.get(ck);
+    	
+    	if(hp.isDirty()) {
+    		blocked.add(tid);
+    		//Possible Deadlock
+    	}
+    	else {
+    		//If requesting write access
+    		if(perm.permLevel == 1) {
+    			//Check in Cache
+    			//Cache contains Page
+    			if(hm.containsKey(ck)) {
+    				//Do something
+    				
+    				if(cv==null) {
+    					hm.put(ck, new CacheValue(tid, perm));
+    					hp.setDirty(true);
+    					return hp;
+    				}
+    			}
+    			//Page not in Cache
+    			else {
+    				hm.put(new CacheKey(tableId, pid), new CacheValue(tid, perm));
+    				hp.setDirty(true);
+    			}
+    		}
+    		//Requesting read-only access
+    		else {
+    			//Add to Cache
+    			hm.put(new CacheKey(tableId, pid), new CacheValue(tid, perm));
+    		}
+    	}
         return null;
     }
 
