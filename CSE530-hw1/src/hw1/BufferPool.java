@@ -7,9 +7,12 @@
 package hw1;
 
 import java.io.*;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from
@@ -29,7 +32,7 @@ public class BufferPool {
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
     
-    
+    /*
     private class CacheKey{
     	private int tabId;
     	private int pageId;
@@ -51,10 +54,11 @@ public class BufferPool {
     		this.p = p;
     	}
     }
-    
+    */
     
     private int numPages;
-    private Map<CacheKey, CacheValue> hm = new HashMap<CacheKey, CacheValue>();
+    //private Map<CacheKey, CacheValue> hm = new HashMap<CacheKey, CacheValue>();
+    private Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> hm = new HashMap<HeapPage, List<SimpleEntry<Integer, Permissions>>>();
     private ArrayList<Integer> blocked = new ArrayList<Integer>();
     
     /**
@@ -77,7 +81,17 @@ public class BufferPool {
     	this.numPages = n;
     }
     
+  //New method added
+    public Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> getHm() {
+    	return this.hm;
+    }
+    
     //New method added
+    public void setHm(Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> hm) {
+    	this.hm = hm;
+    }
+    
+  //New method added
     public ArrayList<Integer> getBlocked() {
     	return this.blocked;
     }
@@ -109,8 +123,9 @@ public class BufferPool {
     	
     	HeapFile f = Database.getCatalog().getDbFile(tableId);
     	HeapPage hp = f.readPage(pid);
-    	CacheKey ck = new CacheKey(tableId, pid);
-    	CacheValue cv = hm.get(ck);
+    	//CacheKey ck = new CacheKey(tableId, pid);
+    	//CacheValue cv = hm.get(ck);
+    	List<SimpleEntry<Integer, Permissions>> lockingTransactions = hm.get(hp);
     	
     	if(hp.isDirty()) {
     		blocked.add(tid);
@@ -121,28 +136,51 @@ public class BufferPool {
     		if(perm.permLevel == 1) {
     			//Check in Cache
     			//Cache contains Page
-    			if(hm.containsKey(ck)) {
-    				//Do something
-    				
-    				if(cv==null) {
-    					hm.put(ck, new CacheValue(tid, perm));
+    			if(hm.containsKey(hp)) {
+    				//Contains but no lock
+    				if(lockingTransactions==null) {
+    					addToPool(tid, perm, hp);
+    					hp.setDirty(true);
+    					//List<SimpleEntry<Integer, Permissions>> temp = lockingTransactions;
+    					//temp.add(new SimpleEntry<Integer, Permissions>(tid, perm));
+    					//hm.put(hp, temp);
     					hp.setDirty(true);
     					return hp;
+    				}
+    				//Contains but only read locks exist
+    				else{
+    					blocked.add(tid);
     				}
     			}
     			//Page not in Cache
     			else {
-    				hm.put(new CacheKey(tableId, pid), new CacheValue(tid, perm));
+    				addToPool(tid, perm, hp);
     				hp.setDirty(true);
+    				//List<SimpleEntry<Integer, Permissions>> temp = lockingTransactions;
+					//temp.add(new SimpleEntry<Integer, Permissions>(tid, perm));
+					//hm.put(hp, temp);
+    				
     			}
     		}
     		//Requesting read-only access
     		else {
     			//Add to Cache
-    			hm.put(new CacheKey(tableId, pid), new CacheValue(tid, perm));
+    			addToPool(tid, perm, hp);
+    			//List<SimpleEntry<Integer, Permissions>> temp = lockingTransactions;
+				//temp.add(new SimpleEntry<Integer, Permissions>(tid, perm));
+//				/hm.put(hp, temp);
     		}
     	}
         return null;
+    }
+    
+    //New Method added
+    public void addToPool(int t, Permissions p, HeapPage h) {
+    	Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
+    	List<SimpleEntry<Integer, Permissions>> l = myMap.get(h);
+    	l.add(new SimpleEntry<Integer,Permissions>(t, p));
+    	myMap.put(h, l);
+    	setHm(myMap);
     }
 
     /**
