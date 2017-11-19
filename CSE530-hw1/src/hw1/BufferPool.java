@@ -182,19 +182,22 @@ public class BufferPool {
     //New Method added
     public void addToPool(int t, Permissions p, HeapPage h) throws Exception {
     	Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
-    	List<SimpleEntry<Integer, Permissions>> l = myMap.get(h);
-    	if(l.size()==getNumPages()) {
-			Iterator<Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>> it = myMap.entrySet().iterator();
-		    while (it.hasNext()) {
-		        Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>> pair = (Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>)it.next();
-		        if (pair.getValue().isEmpty()) {
-		        	it.remove();
-		        	break;
-		        }
-		    }
-    	}
-    	if(l.size()==getNumPages()) {
-    		throw new Exception();
+    	List<SimpleEntry<Integer, Permissions>> l = new ArrayList<SimpleEntry<Integer, Permissions>>();
+    	if(myMap.get(h)!=null) {
+    		l = myMap.get(h);
+	    	if(l.size()==getNumPages()) {
+				Iterator<Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>> it = myMap.entrySet().iterator();
+			    while (it.hasNext()) {
+			        Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>> pair = (Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>)it.next();
+			        if (pair.getValue().isEmpty()) {
+			        	it.remove();
+			        	break;
+			        }
+			    }
+	    	}
+	    	if(l.size()==getNumPages()) {
+	    		throw new Exception();
+	    	}
     	}
     	l.add(new SimpleEntry<Integer,Permissions>(t, p));
     	myMap.put(h, l);
@@ -219,6 +222,9 @@ public class BufferPool {
     	List<SimpleEntry<Integer, Permissions>> l = myMap.get(hp);
     	for(int i=0;i<l.size();i++) {
     		if(l.get(i).getKey()==tid) {
+    			if(l.get(i).getValue().permLevel==1) {
+    				hp.setDirty(false);
+    			}
     			l.remove(i);
     			break;
     		}
