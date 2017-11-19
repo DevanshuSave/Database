@@ -10,6 +10,7 @@ import java.io.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -125,10 +126,13 @@ public class BufferPool {
     	HeapPage hp = f.readPage(pid);
     	//CacheKey ck = new CacheKey(tableId, pid);
     	//CacheValue cv = hm.get(ck);
-    	List<SimpleEntry<Integer, Permissions>> lockingTransactions = hm.get(hp);
-    	
+    	//List<SimpleEntry<Integer, Permissions>> lockingTransactions = getHm().get(hp);
+    	if(hp==null) {
+    		return null;
+    	}
     	if(hp.isDirty()) {
     		blocked.add(tid);
+    		return null;
     		//Possible Deadlock
     	}
     	else {
@@ -136,20 +140,20 @@ public class BufferPool {
     		if(perm.permLevel == 1) {
     			//Check in Cache
     			//Cache contains Page
-    			if(hm.containsKey(hp)) {
+    			if(getHm().containsKey(hp)) {
     				//Contains but no lock
-    				if(lockingTransactions==null) {
+    				if(getHm().get(hp)==null) {
     					addToPool(tid, perm, hp);
     					hp.setDirty(true);
     					//List<SimpleEntry<Integer, Permissions>> temp = lockingTransactions;
     					//temp.add(new SimpleEntry<Integer, Permissions>(tid, perm));
     					//hm.put(hp, temp);
-    					hp.setDirty(true);
     					return hp;
     				}
     				//Contains but only read locks exist
     				else{
     					blocked.add(tid);
+    					return null;
     				}
     			}
     			//Page not in Cache
@@ -159,7 +163,7 @@ public class BufferPool {
     				//List<SimpleEntry<Integer, Permissions>> temp = lockingTransactions;
 					//temp.add(new SimpleEntry<Integer, Permissions>(tid, perm));
 					//hm.put(hp, temp);
-    				
+    				return hp;
     			}
     		}
     		//Requesting read-only access
@@ -168,16 +172,30 @@ public class BufferPool {
     			addToPool(tid, perm, hp);
     			//List<SimpleEntry<Integer, Permissions>> temp = lockingTransactions;
 				//temp.add(new SimpleEntry<Integer, Permissions>(tid, perm));
-//				/hm.put(hp, temp);
+				//hm.put(hp, temp);
+    			return hp;
     		}
     	}
-        return null;
+        //return null;
     }
     
     //New Method added
-    public void addToPool(int t, Permissions p, HeapPage h) {
+    public void addToPool(int t, Permissions p, HeapPage h) throws Exception {
     	Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
     	List<SimpleEntry<Integer, Permissions>> l = myMap.get(h);
+    	if(l.size()==getNumPages()) {
+			Iterator<Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>> it = myMap.entrySet().iterator();
+		    while (it.hasNext()) {
+		        Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>> pair = (Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>)it.next();
+		        if (pair.getValue().isEmpty()) {
+		        	it.remove();
+		        	break;
+		        }
+		    }
+    	}
+    	if(l.size()==getNumPages()) {
+    		throw new Exception();
+    	}
     	l.add(new SimpleEntry<Integer,Permissions>(t, p));
     	myMap.put(h, l);
     	setHm(myMap);
@@ -195,6 +213,18 @@ public class BufferPool {
      */
     public  void releasePage(int tid, int tableId, int pid) {
         // your code here
+    	HeapFile f = Database.getCatalog().getDbFile(tableId);
+    	HeapPage hp = f.readPage(pid);
+    	Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
+    	List<SimpleEntry<Integer, Permissions>> l = myMap.get(hp);
+    	for(int i=0;i<l.size();i++) {
+    		if(l.get(i).getKey()==tid) {
+    			l.remove(i);
+    			break;
+    		}
+    	}
+    	myMap.put(hp, l);
+    	setHm(myMap);
     }
 
     /** Return true if the specified transaction has a lock on the specified page */
