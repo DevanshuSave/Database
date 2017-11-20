@@ -54,6 +54,9 @@ public class HeapPage {
 		return id;
 	}
 
+	public int getTableId() {
+		return tableId;
+	}
 	/**
 	 * Computes and returns the total number of slots that are on this page (occupied or not).
 	 * Must take the header into account!

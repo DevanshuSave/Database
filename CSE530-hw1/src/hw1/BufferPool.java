@@ -130,23 +130,31 @@ public class BufferPool {
     	}
     	if(hp.isDirty()) {
     		blocked.add(tid);
-    		//Wait here
-    		return null;
-    		//Possible Deadlock
+    		
+    		int counter = 0;
+    		//Wait here, Possible Deadlock
+    		while(hp.isDirty()){
+    			try{
+    				if(counter > 15){
+    					transactionComplete(tid, false);
+    					return null;
+    				}
+    				
+    				Thread.sleep(1);
+    				
+    				counter++;
+    			}catch(Exception e){
+    				e.printStackTrace();
+    			}
+    		}
+    		return getPage(tid, tableId, pid, perm);
+    		
     	}
     	else {
     		//If requesting write access
     		if(perm.permLevel == 1) {
     			//Check in Cache
     			//Cache contains Page
-    			
-    			Iterator<Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>> it = getHm().entrySet().iterator();
-			    while (it.hasNext()) {
-			        Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>> pair = (Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>)it.next();
-			        if (pair.getKey().equals(hp)) {
-			        	System.out.println("Match");
-			        }
-			    }
     			if(getHm().containsKey(hp)) {
     				//Contains but no lock
     				if(getHm().get(hp).isEmpty()) {
@@ -168,8 +176,24 @@ public class BufferPool {
     						}
     					}
     					blocked.add(tid);
-    					//Wait here
-    					return null;
+    					
+    					int counter = 0;
+    					while(getHm().get(hp).size() > 1){
+    						try{
+    		    				if(counter > 15){
+    		    					transactionComplete(tid, false);
+    		    					return null;
+    		    				}
+    		    				
+    		    				Thread.sleep(1);
+    		    				
+    		    				counter++;
+    		    			}catch(Exception e){
+    		    				e.printStackTrace();
+    		    			}
+    					}
+    					
+    					return getPage(tid, tableId, pid, perm);
     				}
     			}
     			//Page not in Cache
@@ -244,7 +268,19 @@ public class BufferPool {
 
     /** Return true if the specified transaction has a lock on the specified page */
     public   boolean holdsLock(int tid, int tableId, int pid) {
-        // your code here
+        
+    	HeapFile hf = Database.getCatalog().getDbFile(tableId);
+    	HeapPage hp = hf.readPage(pid);
+    	Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
+    	
+    	if(myMap.containsKey(hp)){
+    		for(int i = 0; i < myMap.get(hp).size(); i++){
+    			if(myMap.get(hp).get(i).getKey() == tid){
+    				return true;
+    			}
+    		}
+    	}
+    	
         return false;
     }
 
@@ -255,10 +291,26 @@ public class BufferPool {
      * @param tid the ID of the transaction requesting the unlock
      * @param commit a flag indicating whether we should commit or abort
      */
-    public   void transactionComplete(int tid, boolean commit)
+    public void transactionComplete(int tid, boolean commit)
         throws IOException {
-        // your code here
+       
+    	ArrayList<HeapPage> thePages = getPages(tid);
     	
+    	for(HeapPage p: thePages){
+    		if(commit){
+    			if(p.isDirty()){
+    				flushPage(p.getTableId(), p.getId());
+    			}
+    			releasePage(tid, p.getTableId(), p.getId());
+    		}else{
+    			if(p.isDirty()){
+    				getHm().remove(p);
+    				continue;
+    			}
+    			releasePage(tid, p.getTableId(), p.getId());
+    		}
+    	}
+    	    	
     	//if commit
 	    	//list = getPages(tid)
 	    	//for each page	
@@ -289,7 +341,6 @@ public class BufferPool {
      */
     public  void insertTuple(int tid, int tableId, Tuple t)
         throws Exception {
-        // your code here
     	//find first page with empty slot
     	//is dirty?
     	HeapFile f = Database.getCatalog().getDbFile(tableId);
@@ -299,6 +350,12 @@ public class BufferPool {
     		if(hp.getNumberOfEmptySlots()>0) {
     			h = getPage(tid, tableId, hp.getId(), Permissions.READ_WRITE);
     			if(h!=null) {
+    				
+    				//YOU'RE RE-ADDING THE HEAPPAGE RETURN BY GETPAGE TO THE CACHE
+    				// BUT YOU DIDNT UPDATE IT. SHOULDN'T WE ADD THE TUPLE T TO THE HEAPPAGE FIRST?
+    				//LIKE:
+    				//    h.addTuple(t);
+    				
     				hm.put(h, getHm().get(h));
     				return;
     			}
@@ -320,10 +377,32 @@ public class BufferPool {
     public  void deleteTuple(int tid, int tableId, Tuple t)
         throws Exception {
         // your code here
+    	
+    	HeapFile f = Database.getCatalog().getDbFile(tableId);
+    	HeapPage h;
+    	for (int i = 0; i < f.getNumPages(); i ++) {
+    		HeapPage hp = f.readPage(i);
+    		
+    		//NEED TO FIND WHAT PAGE THE TUPLE IS ON
+    		//HOW CAN WE ITERATE THRU THE TUPLES ON A PAGE?
+    	}
     }
 
-    private synchronized  void flushPage(int tableId, int pid) throws IOException {
-        // your code here
+    
+    private synchronized void flushPage(int tableId, int pid) throws IOException {
+        HeapFile hp = Database.getCatalog().getDbFile(tableId);
+        Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
+    	
+        for (Map.Entry<HeapPage, List<SimpleEntry<Integer, Permissions>>> entry : myMap.entrySet()){
+        	HeapPage currPage = entry.getKey();
+        	if((currPage.getTableId() == tableId) && (currPage.getId() == pid)){
+        		try {
+					hp.writePage(currPage);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+        	}
+        }
     }
 
     /**
