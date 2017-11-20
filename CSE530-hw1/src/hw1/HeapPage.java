@@ -63,6 +63,20 @@ public class HeapPage {
 		//your code here
 		return (HeapFile.PAGE_SIZE*8)/((td.getSize()*8)+1);
 	}
+	
+	//Method added for HW4
+	public int getNumberOfEmptySlots() {
+		int numberOfEmptySlots = 0;
+		for(int i = 0; i < getHeaderSize(); i++) {
+			int everySlotPos = i / 8;
+			int elementsInSlotPos = i % 8;
+			if((header[everySlotPos] & (1 << elementsInSlotPos)) == 0) {
+				numberOfEmptySlots ++;
+			}
+		}
+		return numberOfEmptySlots;
+	}
+	
 
 	/**
 	 * Computes the size of the header. Headers must be a whole number of bytes (no partial bytes)
@@ -296,12 +310,15 @@ public class HeapPage {
 	
 	//New method added HW4
 	@Override
-	public boolean equals(final Object o) {
+	public boolean equals(Object o) {
 		HeapPage hp = (HeapPage)o;
 		if(hp.id!=this.id) {
 			return false;
 		}
-		if(hp.header!=this.header) {
+		if(hp.tableId!=this.tableId) {
+			return false;
+		}
+		/*if(hp.header!=this.header) {
 			return false;
 		}
 		if(hp.tuples!=this.tuples) {
@@ -313,12 +330,15 @@ public class HeapPage {
 		if(hp.numSlots!=this.numSlots) {
 			return false;
 		}
-		if(hp.tableId!=this.tableId) {
-			return false;
-		}
-		/*if(hp.dirty!=this.dirty) {
+		if(hp.dirty!=this.dirty) {
 			return false;
 		}*/
 		return true;
 	}
+	
+	//New method added HW4
+		@Override
+		public int hashCode() {
+			return (tableId * 31 + id);
+		}
 }

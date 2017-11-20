@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from
@@ -32,7 +33,7 @@ public class BufferPool {
     other classes. BufferPool should use the numPages argument to the
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
-    
+    Catalog c = Database.getCatalog();
     /*
     private class CacheKey{
     	private int tabId;
@@ -122,7 +123,7 @@ public class BufferPool {
         throws Exception {
         // your code here
     	
-    	HeapFile f = Database.getCatalog().getDbFile(tableId);
+    	HeapFile f = c.getDbFile(tableId);
     	HeapPage hp = f.readPage(pid);
     	//CacheKey ck = new CacheKey(tableId, pid);
     	//CacheValue cv = hm.get(ck);
@@ -132,6 +133,7 @@ public class BufferPool {
     	}
     	if(hp.isDirty()) {
     		blocked.add(tid);
+    		//Wait here
     		return null;
     		//Possible Deadlock
     	}
@@ -140,6 +142,15 @@ public class BufferPool {
     		if(perm.permLevel == 1) {
     			//Check in Cache
     			//Cache contains Page
+    			
+    			Iterator<Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>> it = getHm().entrySet().iterator();
+			    while (it.hasNext()) {
+			        Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>> pair = (Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>)it.next();
+			        if (pair.getKey().equals(hp)) {
+			        	System.out.println("Match");
+			        }
+			    }
+			    //Set<HeapPage> s = getHsm().keySet();
     			if(getHm().containsKey(hp)) {
     				//Contains but no lock
     				if(getHm().get(hp).isEmpty()) {
@@ -159,10 +170,12 @@ public class BufferPool {
     					    	l.clear();
     					    	l.add(new SimpleEntry<Integer, Permissions>(tid, perm));
     					    	myMap.put(hp, l);
+    					    	hp.setDirty(true);
     							return hp;
     						}
     					}
     					blocked.add(tid);
+    					//Wait here
     					return null;
     				}
     			}
@@ -189,13 +202,16 @@ public class BufferPool {
         //return null;
     }
     
+    
+    
+    
     //New Method added
     public void addToPool(int t, Permissions p, HeapPage h) throws Exception {
     	Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
     	List<SimpleEntry<Integer, Permissions>> l = new ArrayList<SimpleEntry<Integer, Permissions>>();
     	if(myMap.get(h)!=null) {
     		l = myMap.get(h);
-	    	if(l.size()==getNumPages()) {
+	    	if(myMap.size()==getNumPages()) {
 				Iterator<Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>> it = myMap.entrySet().iterator();
 			    while (it.hasNext()) {
 			        Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>> pair = (Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>)it.next();
@@ -205,7 +221,7 @@ public class BufferPool {
 			        }
 			    }
 	    	}
-	    	if(l.size()==getNumPages()) {
+	    	if(myMap.size()==getNumPages()) {
 	    		throw new Exception();
 	    	}
     	}
@@ -259,6 +275,22 @@ public class BufferPool {
     public   void transactionComplete(int tid, boolean commit)
         throws IOException {
         // your code here
+    	
+    	//if commit
+	    	//list = getPages(tid)
+	    	//for each page	
+	    		//if page is dirty >>> flush + release lock(update map)
+	    		//if page is not dirty >>> release lock (update map)
+    	//if not commit
+	    	//if page is dirty >>> remove page from map + release lock(update map)
+			//if page is not dirty >>> release lock (update map)
+    }
+    
+    
+    //New method added for HW4
+    public ArrayList<HeapPage> getPages(int tid){
+    	//calculate pages locked by transaction
+    	return null;
     }
 
     /**
@@ -275,6 +307,20 @@ public class BufferPool {
     public  void insertTuple(int tid, int tableId, Tuple t)
         throws Exception {
         // your code here
+    	//find first page with empty slot
+    	//is dirty?
+    	HeapFile f = c.getDbFile(tableId);
+    	HeapPage h;
+    	for (int i = 0; i < f.getNumPages(); i ++) {
+    		HeapPage hp = f.readPage(i);
+    		if(hp.getNumberOfEmptySlots()>0) {
+    			h = getPage(tid, tableId, hp.getId(), Permissions.READ_WRITE);
+    			if(h!=null) {
+    				hm.put(h, getHm().get(h));
+    				return;
+    			}
+    		}
+    	}
     }
 
     /**
