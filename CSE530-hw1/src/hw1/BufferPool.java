@@ -202,9 +202,6 @@ public class BufferPool {
         //return null;
     }
     
-    
-    
-    
     //New Method added
     public void addToPool(int t, Permissions p, HeapPage h) throws Exception {
     	Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
