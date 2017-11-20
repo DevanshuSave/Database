@@ -129,7 +129,6 @@ public class HeapFile {
         }
         HeapPage hp = new HeapPage(getNumPages(), new byte[PAGE_SIZE], this.getId());
         hp.addTuple(t);
-        System.out.println("in heapfile:addtuple:second:"+t);
         this.writePage(hp);
         return hp;
 	}

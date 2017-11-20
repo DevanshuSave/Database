@@ -142,9 +142,9 @@ public class BufferPool {
     			//Cache contains Page
     			if(getHm().containsKey(hp)) {
     				//Contains but no lock
-    				if(getHm().get(hp)==null) {
-    					addToPool(tid, perm, hp);
+    				if(getHm().get(hp).isEmpty()) {
     					hp.setDirty(true);
+    					addToPool(tid, perm, hp);
     					//List<SimpleEntry<Integer, Permissions>> temp = lockingTransactions;
     					//temp.add(new SimpleEntry<Integer, Permissions>(tid, perm));
     					//hm.put(hp, temp);
@@ -152,14 +152,24 @@ public class BufferPool {
     				}
     				//Contains but only read locks exist
     				else{
+    					if(getHm().get(hp).size()==1) {
+    						if(getHm().get(hp).get(0).getKey().equals(tid)) {
+    							Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
+    					    	List<SimpleEntry<Integer, Permissions>> l = new ArrayList<SimpleEntry<Integer, Permissions>>();
+    					    	l.clear();
+    					    	l.add(new SimpleEntry<Integer, Permissions>(tid, perm));
+    					    	myMap.put(hp, l);
+    							return hp;
+    						}
+    					}
     					blocked.add(tid);
     					return null;
     				}
     			}
     			//Page not in Cache
     			else {
-    				addToPool(tid, perm, hp);
     				hp.setDirty(true);
+    				addToPool(tid, perm, hp);
     				//List<SimpleEntry<Integer, Permissions>> temp = lockingTransactions;
 					//temp.add(new SimpleEntry<Integer, Permissions>(tid, perm));
 					//hm.put(hp, temp);

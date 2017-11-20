@@ -97,4 +97,26 @@ public class Tuple {
 		}
 		return s.toString();
 	}
+	
+	//New method Added for HW4
+	public boolean equals(Object o) {
+		
+		if(o==null) {
+			return false;
+		}
+		Tuple t = (Tuple)o;
+		if(!t.desc.equals(this.getDesc())) {
+			return false;
+		}
+		if(t.getId()!=this.getId()) {
+			return false;
+		}
+		if(t.getPid()!=this.getPid()) {
+			return false;
+		}
+		if(!t.field.equals(this.field)){
+			return false;
+		}
+		return true;
+	}
 }

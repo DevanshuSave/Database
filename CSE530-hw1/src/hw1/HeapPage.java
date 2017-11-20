@@ -20,7 +20,7 @@ public class HeapPage {
 	private int tableId;
 	
 	//For HW4
-	boolean dirty;
+	private boolean dirty;
 
 
 	public HeapPage(int id, byte[] data, int tableId) throws IOException {
@@ -291,5 +291,34 @@ public class HeapPage {
             if (slotOccupied(i)) myList.add(tuples[i]);
         }
         return myList.iterator();
+	}
+	
+	
+	//New method added HW4
+	@Override
+	public boolean equals(final Object o) {
+		HeapPage hp = (HeapPage)o;
+		if(hp.id!=this.id) {
+			return false;
+		}
+		if(hp.header!=this.header) {
+			return false;
+		}
+		if(hp.tuples!=this.tuples) {
+			return false;
+		}
+		if(hp.td!=this.td) {
+			return false;
+		}
+		if(hp.numSlots!=this.numSlots) {
+			return false;
+		}
+		if(hp.tableId!=this.tableId) {
+			return false;
+		}
+		/*if(hp.dirty!=this.dirty) {
+			return false;
+		}*/
+		return true;
 	}
 }
