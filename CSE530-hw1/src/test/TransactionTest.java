@@ -51,6 +51,7 @@ public class TransactionTest {
 		
 		tid = c.getTableId("test");
 	}
+	
 	@Test
 	public void testReleaseLocks() throws Exception {
 		bp.getPage(0, tid, 0, Permissions.READ_ONLY);
@@ -63,6 +64,7 @@ public class TransactionTest {
 	    assertTrue(true); //will only reach this point if locks are properly released
 	}
 	
+	@Test
 	public void testCommit() throws Exception {
 		Tuple t = new Tuple(td);
 		t.setField(0, new IntField(new byte[] {0, 0, 0, (byte)131}));
@@ -87,6 +89,7 @@ public class TransactionTest {
 		assertFalse(it.hasNext());
 	}
 	
+	@Test
 	public void testAbort() throws Exception {
 		Tuple t = new Tuple(td);
 		t.setField(0, new IntField(new byte[] {0, 0, 0, (byte)131}));

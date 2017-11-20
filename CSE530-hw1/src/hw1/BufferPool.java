@@ -33,7 +33,7 @@ public class BufferPool {
     other classes. BufferPool should use the numPages argument to the
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
-    Catalog c = Database.getCatalog();
+
     /*
     private class CacheKey{
     	private int tabId;
@@ -93,7 +93,7 @@ public class BufferPool {
     	this.hm = hm;
     }
     
-  //New method added
+    //New method added
     public ArrayList<Integer> getBlocked() {
     	return this.blocked;
     }
@@ -123,11 +123,8 @@ public class BufferPool {
         throws Exception {
         // your code here
     	
-    	HeapFile f = c.getDbFile(tableId);
+    	HeapFile f = Database.getCatalog().getDbFile(tableId);
     	HeapPage hp = f.readPage(pid);
-    	//CacheKey ck = new CacheKey(tableId, pid);
-    	//CacheValue cv = hm.get(ck);
-    	//List<SimpleEntry<Integer, Permissions>> lockingTransactions = getHm().get(hp);
     	if(hp==null) {
     		return null;
     	}
@@ -150,15 +147,11 @@ public class BufferPool {
 			        	System.out.println("Match");
 			        }
 			    }
-			    //Set<HeapPage> s = getHsm().keySet();
     			if(getHm().containsKey(hp)) {
     				//Contains but no lock
     				if(getHm().get(hp).isEmpty()) {
     					hp.setDirty(true);
     					addToPool(tid, perm, hp);
-    					//List<SimpleEntry<Integer, Permissions>> temp = lockingTransactions;
-    					//temp.add(new SimpleEntry<Integer, Permissions>(tid, perm));
-    					//hm.put(hp, temp);
     					return hp;
     				}
     				//Contains but only read locks exist
@@ -183,9 +176,6 @@ public class BufferPool {
     			else {
     				hp.setDirty(true);
     				addToPool(tid, perm, hp);
-    				//List<SimpleEntry<Integer, Permissions>> temp = lockingTransactions;
-					//temp.add(new SimpleEntry<Integer, Permissions>(tid, perm));
-					//hm.put(hp, temp);
     				return hp;
     			}
     		}
@@ -193,13 +183,9 @@ public class BufferPool {
     		else {
     			//Add to Cache
     			addToPool(tid, perm, hp);
-    			//List<SimpleEntry<Integer, Permissions>> temp = lockingTransactions;
-				//temp.add(new SimpleEntry<Integer, Permissions>(tid, perm));
-				//hm.put(hp, temp);
     			return hp;
     		}
     	}
-        //return null;
     }
     
     //New Method added
@@ -276,11 +262,11 @@ public class BufferPool {
     	//if commit
 	    	//list = getPages(tid)
 	    	//for each page	
-	    		//if page is dirty >>> flush + release lock(update map)
-	    		//if page is not dirty >>> release lock (update map)
+	    		//if page is dirty >>> flush + releasePage
+	    		//if page is not dirty >>> releasePage
     	//if not commit
-	    	//if page is dirty >>> remove page from map + release lock(update map)
-			//if page is not dirty >>> release lock (update map)
+	    	//if page is dirty >>> remove page from map + releasePage
+			//if page is not dirty >>> releasePage
     }
     
     
@@ -306,7 +292,7 @@ public class BufferPool {
         // your code here
     	//find first page with empty slot
     	//is dirty?
-    	HeapFile f = c.getDbFile(tableId);
+    	HeapFile f = Database.getCatalog().getDbFile(tableId);
     	HeapPage h;
     	for (int i = 0; i < f.getNumPages(); i ++) {
     		HeapPage hp = f.readPage(i);
