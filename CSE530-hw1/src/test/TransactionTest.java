@@ -60,7 +60,7 @@ public class TransactionTest {
 
 	    bp.getPage(1, tid, 0, Permissions.READ_WRITE);
 	    bp.getPage(1, tid, 0, Permissions.READ_WRITE);
-		bp.transactionComplete(0, true);
+		bp.transactionComplete(1, true);
 	    assertTrue(true); //will only reach this point if locks are properly released
 	}
 	
@@ -73,6 +73,7 @@ public class TransactionTest {
 		s[1] = 98;
 		s[2] = 121;
 		t.setField(1, new StringField(s));
+		
 		
 		bp.getPage(0, tid, 0, Permissions.READ_WRITE); //acquire lock for the page
 		bp.insertTuple(0, tid, t); //insert the tuple into the page

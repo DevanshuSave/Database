@@ -71,11 +71,17 @@ public class HeapPage {
 	public int getNumberOfEmptySlots() {
 		int numberOfEmptySlots = 0;
 		for(int i = 0; i < getHeaderSize(); i++) {
+			
+			if((header[i/8] >> i%8 & 1)==0) {
+				numberOfEmptySlots++;
+			}
+		/*	
 			int everySlotPos = i / 8;
 			int elementsInSlotPos = i % 8;
 			if((header[everySlotPos] & (1 << elementsInSlotPos)) == 0) {
 				numberOfEmptySlots ++;
 			}
+		*/	
 		}
 		return numberOfEmptySlots;
 	}

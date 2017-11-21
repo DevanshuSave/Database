@@ -62,6 +62,9 @@ public class BufferPool {
     private Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> hm = new HashMap<HeapPage, List<SimpleEntry<Integer, Permissions>>>();
     private ArrayList<Integer> blocked = new ArrayList<Integer>();
     
+    private Map<SimpleEntry<Integer, Integer>,List<HeapPage>> tempPages = new HashMap<SimpleEntry<Integer, Integer>,List<HeapPage>>();
+    
+    
     /**
      * Creates a BufferPool that caches up to numPages pages.
      *
@@ -210,6 +213,7 @@ public class BufferPool {
     		    				counter++;
     		    			}catch(Exception e){
     		    				e.printStackTrace();
+    		    				throw new Exception();
     		    			}
     					}
     					return getPage(tid, tableId, pid, perm);
@@ -222,7 +226,9 @@ public class BufferPool {
     						evictPage();
     					}
     					catch (Exception e) {
+    						transactionComplete(tid, false);
     						e.printStackTrace();
+    						return null;
 						}
     				}
     				hp.setDirty(true);
@@ -239,7 +245,9 @@ public class BufferPool {
 							evictPage();
 						}
 						catch (Exception e) {
+							transactionComplete(tid, false);
 							e.printStackTrace();
+							return null;
 						}
 					}
     			}
@@ -280,6 +288,21 @@ public class BufferPool {
         // your code here
     	HeapFile f = Database.getCatalog().getDbFile(tableId);
     	HeapPage hp = f.readPage(pid);
+    	
+    	if(hp==null) {
+    		return;
+    	}
+    	else {
+    		if(getHm().containsKey(hp)) {
+    			for ( HeapPage key : getHm().keySet() ) {
+    				if(key.equals(hp)) {
+    					hp=key;
+    					break;
+    				}
+    			}
+    		}
+    	}
+    	
     	Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
     	List<SimpleEntry<Integer, Permissions>> l = myMap.get(hp);
     	for(int i=0;i<l.size();i++) {
@@ -342,8 +365,8 @@ public class BufferPool {
     			}
     			releasePage(tid, p.getTableId(), p.getId());
     		}
+    		tempPages.remove(new SimpleEntry<Integer, Integer>(tid, p.getTableId()));
     	}
-    	    	
     	//if commit
 	    	//list = getPages(tid)
 	    	//for each page	
@@ -392,27 +415,86 @@ public class BufferPool {
     	//find first page with empty slot
     	//is dirty?
     	HeapFile f = Database.getCatalog().getDbFile(tableId);
-    	HeapPage h;
-    	for (int i = 0; i < f.getNumPages(); i ++) {
-    		HeapPage hp = f.readPage(i);
-    		if(hp.getNumberOfEmptySlots()>0) {
-    			try {
-					h = getPage(tid, tableId, hp.getId(), Permissions.READ_WRITE);
-	    				
-    				//YOU'RE RE-ADDING THE HEAPPAGE RETURN BY GETPAGE TO THE CACHE
-    				// BUT YOU DIDNT UPDATE IT. SHOULDN'T WE ADD THE TUPLE T TO THE HEAPPAGE FIRST?
-    				//LIKE:
-    				//    h.addTuple(t);
-    				h.addTuple(t);
-    				hm.put(h, getHm().get(h));
-    				return;
+    	HeapPage h = null;
+    	boolean flag = true;
+    	int cap = 0;
+		if(!tempPages.containsKey(new SimpleEntry<Integer, Integer>(tid, tableId))) {
+	    	for (int i = 0; i < f.getNumPages(); i ++) {
+	    		HeapPage hp = f.readPage(i);
+	    		if(hp==null) {
+	        		return;
+	        	}
+	        	else {
+	        		if(getHm().containsKey(hp)) {
+	        			for ( HeapPage key : getHm().keySet() ) {
+	        				if(key.equals(hp)) {
+	        					hp=key;
+	        					break;
+	        				}
+	        			}
+	        		}
+	        	}
+	    		if(hp.getNumberOfEmptySlots()>0) {
+	    			try {
+						h = getPage(tid, tableId, hp.getId(), Permissions.READ_WRITE);
+		    				
+	    				//YOU'RE RE-ADDING THE HEAPPAGE RETURN BY GETPAGE TO THE CACHE
+	    				// BUT YOU DIDNT UPDATE IT. SHOULDN'T WE ADD THE TUPLE T TO THE HEAPPAGE FIRST?
+	    				//LIKE:
+	    				//    h.addTuple(t);
+						if(h!=null) {
+							h.addTuple(t);
+							hm.put(h, getHm().get(h));
+						}
+						else {
+							transactionComplete(tid, false);
+						}
+						return;
+					}
+					catch(Exception e) {
+						//e.printStackTrace();
+					}
+	    		}
+	    	}
+		}
+		else {
+			List<HeapPage> pgs = tempPages.get(new SimpleEntry<Integer, Integer>(tid, tableId));
+			h = pgs.get(pgs.size()-1);
+			cap = pgs.size();
+			if(h.getNumberOfEmptySlots()!=0) {
+				flag = false;
+			}
+		}
+		
+    	if(flag) {
+    		if(getHm().size()==getNumPages()) {
+	    		try {
+	    			evictPage();
+	    			h = new HeapPage(f.getNumPages()+cap, new byte[HeapFile.PAGE_SIZE], f.getId());
+	    		}
+	    		catch (Exception e) {
+	    			transactionComplete(tid, false);
+	    			return;
 				}
-				catch(Exception e) {
-					e.printStackTrace();
-					transactionComplete(tid, false);
-				}
-    		}
+	    	}
     	}
+    	if(h==null) {
+    		System.out.println("Alert!");
+    	}
+    	List<HeapPage> pgs = new ArrayList<HeapPage>();
+    	if(cap!=0) {
+    		pgs.addAll(tempPages.get(new SimpleEntry<Integer, Integer>(tid, tableId)));
+    	}
+		h.setDirty(true);
+		pgs.add(h);
+		tempPages.put(new SimpleEntry<Integer, Integer>(tid, tableId), pgs);
+    	
+    	h.addTuple(t);
+    	List<SimpleEntry<Integer, Permissions>> l = new ArrayList<SimpleEntry<Integer, Permissions>>();
+    	l.add(new SimpleEntry<Integer, Permissions>(tid, Permissions.READ_WRITE));
+    	hm.remove(h);
+    	hm.put(h, l);
+    	return;
     }
 
     /**
@@ -465,8 +547,14 @@ public class BufferPool {
         	if((currPage.getTableId() == tableId) && (currPage.getId() == pid)){
         		try {
 					hf.writePage(currPage);
-					//Added next line
+					/*Added next lines
 					currPage.setDirty(false);
+					List<SimpleEntry<Integer, Permissions>> l = new ArrayList<SimpleEntry<Integer, Permissions>>();
+					l=myMap.get(currPage);
+					myMap.remove(currPage);
+					myMap.put(currPage, l);
+					setHm(myMap);*/
+					
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
