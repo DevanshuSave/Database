@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from
@@ -148,7 +147,6 @@ public class BufferPool {
     			}
     		}
     		return getPage(tid, tableId, pid, perm);
-    		
     	}
     	else {
     		//If requesting write access
@@ -192,12 +190,19 @@ public class BufferPool {
     		    				e.printStackTrace();
     		    			}
     					}
-    					
     					return getPage(tid, tableId, pid, perm);
     				}
     			}
     			//Page not in Cache
     			else {
+    				if(getHm().size()==getNumPages()) {
+    					try{
+    						evictPage();
+    					}
+    					catch (Exception e) {
+    						e.printStackTrace();
+						}
+    				}
     				hp.setDirty(true);
     				addToPool(tid, perm, hp);
     				return hp;
@@ -206,6 +211,16 @@ public class BufferPool {
     		//Requesting read-only access
     		else {
     			//Add to Cache
+    			if(!getHm().containsKey(hp)) {
+	    			if(getHm().size()==getNumPages()) {
+						try{
+							evictPage();
+						}
+						catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+    			}
     			addToPool(tid, perm, hp);
     			return hp;
     		}
@@ -213,24 +228,11 @@ public class BufferPool {
     }
     
     //New Method added
-    public void addToPool(int t, Permissions p, HeapPage h) throws Exception {
+    public void addToPool(int t, Permissions p, HeapPage h) {
     	Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
     	List<SimpleEntry<Integer, Permissions>> l = new ArrayList<SimpleEntry<Integer, Permissions>>();
     	if(myMap.get(h)!=null) {
     		l = myMap.get(h);
-	    	if(myMap.size()==getNumPages()) {
-				Iterator<Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>> it = myMap.entrySet().iterator();
-			    while (it.hasNext()) {
-			        Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>> pair = (Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>)it.next();
-			        if (pair.getValue().isEmpty()) {
-			        	it.remove();
-			        	break;
-			        }
-			    }
-	    	}
-	    	if(myMap.size()==getNumPages()) {
-	    		throw new Exception();
-	    	}
     	}
     	l.add(new SimpleEntry<Integer,Permissions>(t, p));
     	myMap.put(h, l);
@@ -280,7 +282,6 @@ public class BufferPool {
     			}
     		}
     	}
-    	
         return false;
     }
 
@@ -302,7 +303,8 @@ public class BufferPool {
     				flushPage(p.getTableId(), p.getId());
     			}
     			releasePage(tid, p.getTableId(), p.getId());
-    		}else{
+    		}
+    		else{
     			if(p.isDirty()){
     				getHm().remove(p);
     				continue;
@@ -324,8 +326,23 @@ public class BufferPool {
     
     //New method added for HW4
     public ArrayList<HeapPage> getPages(int tid){
-    	//calculate pages locked by transaction
-    	return null;
+    	//returns pages locked by transaction
+    	ArrayList<HeapPage> pages = new ArrayList<HeapPage>();
+    	Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
+    	List<SimpleEntry<Integer, Permissions>> l = new ArrayList<SimpleEntry<Integer, Permissions>>();
+    	Iterator<Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>> it = myMap.entrySet().iterator();
+	    while (it.hasNext()) {
+	    	Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>> m = it.next();
+	        l = m.getValue();
+	        if (!l.isEmpty()) {
+	        	for (SimpleEntry<Integer, Permissions> temp : l) {
+	        		if(temp.getKey()==tid) {
+	        			pages.add(m.getKey());
+	        		}
+	    		}
+	        }
+	    }
+    	return pages;
     }
 
     /**
@@ -355,7 +372,7 @@ public class BufferPool {
     				// BUT YOU DIDNT UPDATE IT. SHOULDN'T WE ADD THE TUPLE T TO THE HEAPPAGE FIRST?
     				//LIKE:
     				//    h.addTuple(t);
-    				
+    				h.addTuple(t);
     				hm.put(h, getHm().get(h));
     				return;
     			}
@@ -411,6 +428,42 @@ public class BufferPool {
      */
     private synchronized  void evictPage() throws Exception {
         // your code here
+    	Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
+    	if(myMap.size()!=getNumPages()) {
+    		return;
+    	}
+    	else {
+    		//Find a page without any lock
+			Iterator<Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>> it = myMap.entrySet().iterator();
+		    while (it.hasNext()) {
+		        Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>> pair = (Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>)it.next();
+		        if (pair.getValue().isEmpty()) {
+		        	it.remove();
+		        	setHm(myMap);
+		        	return;
+		        }
+		    }
+		    
+		    //Find a page with only read locks
+    		it = myMap.entrySet().iterator();
+		    while (it.hasNext()) {
+		    	boolean remove = true;
+		        Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>> pair = (Map.Entry<HeapPage,List<SimpleEntry<Integer, Permissions>>>)it.next();
+		        for(SimpleEntry<Integer, Permissions> s : pair.getValue()) {
+		        	if(s.getValue().permLevel==1) {
+		        		remove = false;
+		        		break;
+		        	}
+		        }
+		        if(remove) {
+		        	for(SimpleEntry<Integer, Permissions> s : pair.getValue()) {
+		        		releasePage(s.getKey(), pair.getKey().getTableId(), pair.getKey().getId());
+			        }
+		        }
+	    	}
+	    	if(myMap.size()==getNumPages()) {
+	    		throw new Exception();
+	    	}
+    	}
     }
-
 }
