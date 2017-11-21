@@ -127,7 +127,17 @@ public class BufferPool {
     	if(hp==null) {
     		return null;
     	}
-    	if(hp.isDirty()) {
+    	else {
+    		if(getHm().containsKey(hp)) {
+    			for ( HeapPage key : getHm().keySet() ) {
+    				if(key.equals(hp)) {
+    					hp=key;
+    					break;
+    				}
+    			}
+    		}
+    	}
+    	if(hp.isDirty() && !(holdsLock(tid, tableId, pid))) {
     		blocked.add(tid);
     		
     		int counter = 0;
@@ -160,18 +170,30 @@ public class BufferPool {
     					addToPool(tid, perm, hp);
     					return hp;
     				}
-    				//Contains but only read locks exist
+    				//Contains but only read locks/self write lock exist
     				else{
     					if(getHm().get(hp).size()==1) {
+    						if(holdsLock(tid, tableId, pid)) {
+								hp.setDirty(true);
+								Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
+								List<SimpleEntry<Integer, Permissions>> l = new ArrayList<SimpleEntry<Integer, Permissions>>();
+								l.add(new SimpleEntry<Integer, Permissions>(tid, perm));
+								myMap.remove(hp);
+								myMap.put(hp, l);
+								setHm(myMap);
+								return hp;
+    						}
+    						/*
     						if(getHm().get(hp).get(0).getKey().equals(tid)) {
     							Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
     					    	List<SimpleEntry<Integer, Permissions>> l = new ArrayList<SimpleEntry<Integer, Permissions>>();
     					    	l.clear();
     					    	l.add(new SimpleEntry<Integer, Permissions>(tid, perm));
-    					    	myMap.put(hp, l);
     					    	hp.setDirty(true);
+    					    	myMap.put(hp, l);
     							return hp;
     						}
+    						*/
     					}
     					blocked.add(tid);
     					
@@ -239,6 +261,7 @@ public class BufferPool {
     		}
     	}
     	l.add(new SimpleEntry<Integer,Permissions>(t, p));
+    	myMap.remove(h);
     	myMap.put(h, l);
     	setHm(myMap);
     }
@@ -277,6 +300,10 @@ public class BufferPool {
         
     	HeapFile hf = Database.getCatalog().getDbFile(tableId);
     	HeapPage hp = hf.readPage(pid);
+    	if(hp==null) {
+    		return false;
+    	}
+    	
     	Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
     	
     	if(myMap.containsKey(hp)){
@@ -378,6 +405,7 @@ public class BufferPool {
     				//    h.addTuple(t);
     				h.addTuple(t);
     				hm.put(h, getHm().get(h));
+    				return;
 				}
 				catch(Exception e) {
 					e.printStackTrace();
@@ -429,14 +457,16 @@ public class BufferPool {
 
     
     private synchronized void flushPage(int tableId, int pid) throws IOException {
-        HeapFile hp = Database.getCatalog().getDbFile(tableId);
+        HeapFile hf = Database.getCatalog().getDbFile(tableId);
         Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
     	
         for (Map.Entry<HeapPage, List<SimpleEntry<Integer, Permissions>>> entry : myMap.entrySet()){
         	HeapPage currPage = entry.getKey();
         	if((currPage.getTableId() == tableId) && (currPage.getId() == pid)){
         		try {
-					hp.writePage(currPage);
+					hf.writePage(currPage);
+					//Added next line
+					currPage.setDirty(false);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
