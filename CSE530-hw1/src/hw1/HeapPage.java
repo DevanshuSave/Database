@@ -70,7 +70,7 @@ public class HeapPage {
 	//Method added for HW4
 	public int getNumberOfEmptySlots() {
 		int numberOfEmptySlots = 0;
-		for(int i = 0; i < getHeaderSize(); i++) {
+		for(int i = 0; i < getNumSlots(); i++) {
 			
 			if((header[i/8] >> i%8 & 1)==0) {
 				numberOfEmptySlots++;

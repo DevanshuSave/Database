@@ -76,7 +76,11 @@ public class TransactionTest {
 		
 		
 		bp.getPage(0, tid, 0, Permissions.READ_WRITE); //acquire lock for the page
-		bp.insertTuple(0, tid, t); //insert the tuple into the page
+		int count =0;
+		while(count<35) {
+			bp.insertTuple(0, tid, t); //insert the tuple into the page
+			count++;
+		}
 		bp.transactionComplete(0, true); //should flush the modified page
 		
 		//reset the buffer pool, get the page again, make sure data is there

@@ -470,13 +470,13 @@ public class BufferPool {
     		if(getHm().size()==getNumPages()) {
 	    		try {
 	    			evictPage();
-	    			h = new HeapPage(f.getNumPages()+cap, new byte[HeapFile.PAGE_SIZE], f.getId());
 	    		}
 	    		catch (Exception e) {
 	    			transactionComplete(tid, false);
 	    			return;
 				}
 	    	}
+    		h = new HeapPage(f.getNumPages()+cap, new byte[HeapFile.PAGE_SIZE], f.getId());
     	}
     	if(h==null) {
     		System.out.println("Alert!");
