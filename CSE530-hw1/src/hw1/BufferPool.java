@@ -233,6 +233,10 @@ public class BufferPool {
     	List<SimpleEntry<Integer, Permissions>> l = new ArrayList<SimpleEntry<Integer, Permissions>>();
     	if(myMap.get(h)!=null) {
     		l = myMap.get(h);
+    		//Avoid adding the same transaction-permission pair
+    		if(l.contains(new SimpleEntry<Integer, Permissions>(t, p))) {
+    			return;
+    		}
     	}
     	l.add(new SimpleEntry<Integer,Permissions>(t, p));
     	myMap.put(h, l);
@@ -261,7 +265,7 @@ public class BufferPool {
     				hp.setDirty(false);
     			}
     			l.remove(i);
-    			break;
+    			break;//Should we break? what if same transaction has requested the same lock multiple times
     		}
     	}
     	myMap.put(hp, l);
@@ -365,17 +369,20 @@ public class BufferPool {
     	for (int i = 0; i < f.getNumPages(); i ++) {
     		HeapPage hp = f.readPage(i);
     		if(hp.getNumberOfEmptySlots()>0) {
-    			h = getPage(tid, tableId, hp.getId(), Permissions.READ_WRITE);
-    			if(h!=null) {
-    				
+    			try {
+					h = getPage(tid, tableId, hp.getId(), Permissions.READ_WRITE);
+	    				
     				//YOU'RE RE-ADDING THE HEAPPAGE RETURN BY GETPAGE TO THE CACHE
     				// BUT YOU DIDNT UPDATE IT. SHOULDN'T WE ADD THE TUPLE T TO THE HEAPPAGE FIRST?
     				//LIKE:
     				//    h.addTuple(t);
     				h.addTuple(t);
     				hm.put(h, getHm().get(h));
-    				return;
-    			}
+				}
+				catch(Exception e) {
+					e.printStackTrace();
+					transactionComplete(tid, false);
+				}
     		}
     	}
     }
@@ -402,6 +409,21 @@ public class BufferPool {
     		
     		//NEED TO FIND WHAT PAGE THE TUPLE IS ON
     		//HOW CAN WE ITERATE THRU THE TUPLES ON A PAGE?
+    		Iterator<Tuple> it = hp.iterator();
+    		while(it.hasNext()) {
+    			if((it.next()).equals(t)) {
+    				try {
+    					h = getPage(tid, tableId, hp.getId(), Permissions.READ_WRITE);
+    					
+    					h.deleteTuple(t);
+    					hm.put(h, getHm().get(h));
+    				}
+    				catch(Exception e) {
+    					e.printStackTrace();
+    					transactionComplete(tid, false);
+    				}
+    			}
+    		}
     	}
     }
 
