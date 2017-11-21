@@ -140,6 +140,10 @@ public class BufferPool {
     			}
     		}
     	}
+    	if(hp.isDirty() && (holdsLock(tid, tableId, pid))) {
+    		return hp;
+    	}
+    	
     	if(hp.isDirty() && !(holdsLock(tid, tableId, pid))) {
     		blocked.add(tid);
     		
@@ -173,7 +177,7 @@ public class BufferPool {
     					addToPool(tid, perm, hp);
     					return hp;
     				}
-    				//Contains but only read locks/self write lock exist
+    				//Contains but only read locks exist
     				else{
     					if(getHm().get(hp).size()==1) {
     						if(holdsLock(tid, tableId, pid)) {
@@ -472,6 +476,7 @@ public class BufferPool {
 	    			evictPage();
 	    		}
 	    		catch (Exception e) {
+	    			System.out.println("Could not evict");
 	    			transactionComplete(tid, false);
 	    			return;
 				}
