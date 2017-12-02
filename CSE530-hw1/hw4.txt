@@ -1,0 +1,11 @@
+release locks test: correct
+commit test: correct
+abort test: correct
+evict test: incorrect (-5)
+read locks test: correct
+lock upgrade test: correct
+write locks test: correct
+read then write: incorrect (-5)
+write then read: correct
+deadlock test: correct
+Total: 90 / 100
