@@ -33,37 +33,11 @@ public class BufferPool {
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
 
-    /*
-    private class CacheKey{
-    	private int tabId;
-    	private int pageId;
-    	
-    	public CacheKey(int tabId, int pageId) {
-    		super();
-    		this.tabId = tabId;
-    		this.pageId = pageId;
-    	}
-    }
-    
-    private class CacheValue{
-    	private int transactionId;
-    	private Permissions p;
-    	
-    	public CacheValue(int transactionId, Permissions p) {
-    		super();
-    		this.transactionId = transactionId;
-    		this.p = p;
-    	}
-    }
-    */
     
     private int numPages;
-    //private Map<CacheKey, CacheValue> hm = new HashMap<CacheKey, CacheValue>();
     private Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> hm = new HashMap<HeapPage, List<SimpleEntry<Integer, Permissions>>>();
     private ArrayList<Integer> blocked = new ArrayList<Integer>();
-    
     private Map<SimpleEntry<Integer, Integer>,List<HeapPage>> tempPages = new HashMap<SimpleEntry<Integer, Integer>,List<HeapPage>>();
-    
     
     /**
      * Creates a BufferPool that caches up to numPages pages.
@@ -85,7 +59,7 @@ public class BufferPool {
     	this.numPages = n;
     }
     
-  //New method added
+    //New method added
     public Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> getHm() {
     	return this.hm;
     }
@@ -190,17 +164,6 @@ public class BufferPool {
 								setHm(myMap);
 								return hp;
     						}
-    						/*
-    						if(getHm().get(hp).get(0).getKey().equals(tid)) {
-    							Map<HeapPage,List<SimpleEntry<Integer, Permissions>>> myMap = getHm();
-    					    	List<SimpleEntry<Integer, Permissions>> l = new ArrayList<SimpleEntry<Integer, Permissions>>();
-    					    	l.clear();
-    					    	l.add(new SimpleEntry<Integer, Permissions>(tid, perm));
-    					    	hp.setDirty(true);
-    					    	myMap.put(hp, l);
-    							return hp;
-    						}
-    						*/
     					}
     					blocked.add(tid);
     					
@@ -315,7 +278,7 @@ public class BufferPool {
     				hp.setDirty(false);
     			}
     			l.remove(i);
-    			break;//Should we break? what if same transaction has requested the same lock multiple times
+    			break;
     		}
     	}
     	myMap.put(hp, l);
@@ -430,7 +393,7 @@ public class BufferPool {
 	        	}
 	        	else {
 	        		if(getHm().containsKey(hp)) {
-	        			for ( HeapPage key : getHm().keySet() ) {
+	        			for (HeapPage key : getHm().keySet() ) {
 	        				if(key.equals(hp)) {
 	        					hp=key;
 	        					break;
@@ -441,11 +404,6 @@ public class BufferPool {
 	    		if(hp.getNumberOfEmptySlots()>0) {
 	    			try {
 						h = getPage(tid, tableId, hp.getId(), Permissions.READ_WRITE);
-		    				
-	    				//YOU'RE RE-ADDING THE HEAPPAGE RETURN BY GETPAGE TO THE CACHE
-	    				// BUT YOU DIDNT UPDATE IT. SHOULDN'T WE ADD THE TUPLE T TO THE HEAPPAGE FIRST?
-	    				//LIKE:
-	    				//    h.addTuple(t);
 						if(h!=null) {
 							h.addTuple(t);
 							hm.put(h, getHm().get(h));
@@ -456,7 +414,8 @@ public class BufferPool {
 						return;
 					}
 					catch(Exception e) {
-						//e.printStackTrace();
+						System.out.println("Lol");
+						e.printStackTrace();
 					}
 	    		}
 	    	}
@@ -522,8 +481,6 @@ public class BufferPool {
     	for (int i = 0; i < f.getNumPages(); i ++) {
     		HeapPage hp = f.readPage(i);
     		
-    		//NEED TO FIND WHAT PAGE THE TUPLE IS ON
-    		//HOW CAN WE ITERATE THRU THE TUPLES ON A PAGE?
     		Iterator<Tuple> it = hp.iterator();
     		while(it.hasNext()) {
     			if((it.next()).equals(t)) {
@@ -552,14 +509,6 @@ public class BufferPool {
         	if((currPage.getTableId() == tableId) && (currPage.getId() == pid)){
         		try {
 					hf.writePage(currPage);
-					/*Added next lines
-					currPage.setDirty(false);
-					List<SimpleEntry<Integer, Permissions>> l = new ArrayList<SimpleEntry<Integer, Permissions>>();
-					l=myMap.get(currPage);
-					myMap.remove(currPage);
-					myMap.put(currPage, l);
-					setHm(myMap);*/
-					
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
