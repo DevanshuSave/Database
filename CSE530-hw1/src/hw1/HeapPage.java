@@ -157,7 +157,7 @@ public class HeapPage {
 					t.setId(i);
 					t.setPid(getId());
 					tuples[i]=t;
-					System.out.println("in heapfile:addtuple:first:"+t);
+					//System.out.println("in heapfile:addtuple:first:"+t);
 					setSlotOccupied(i,true);
 					return;
 				}
