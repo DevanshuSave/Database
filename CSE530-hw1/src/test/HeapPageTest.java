@@ -74,7 +74,6 @@ public class HeapPageTest {
 		
 		Iterator<Tuple> it = hp.iterator();
 		assertTrue(it.hasNext());
-		System.out.println("1");
 		it.next();
 		assertTrue(it.hasNext());
 		it.next();
@@ -102,8 +101,6 @@ public class HeapPageTest {
 		
 		Iterator<Tuple> it = hp.iterator();
 		assertFalse(it.hasNext());
-		
-		
 		
 	}
 
