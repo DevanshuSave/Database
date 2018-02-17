@@ -6,10 +6,9 @@ The idea selected is Creating explicit Transaction objects and running multi-thr
 ## Implementation details
 
 ### Files created:
-Actions
-Transaction
-DeadlockTest
-
+ - Actions: The class represents the actions which can be requested for a transaction (fetch page, read, write, complete/commit)
+ - Transaction: This class maintains a transaction object which is and the execution expected in response to the list of actions(type: Trans, discussed in the next point) it receives 
+ - DeadlockTest: Tests multiple scenarios of a transaction schedule. This class contains an innerclass Trans which contains the data required to pass to a transaction (Action, page, table, tuple)
 
 ## References
 
