@@ -27,6 +27,7 @@ public class RelationTest {
 	private HeapFile ahf;
 	private TupleDesc atd;
 	private Catalog c;
+	
 
 	@Before
 	public void setup() {
